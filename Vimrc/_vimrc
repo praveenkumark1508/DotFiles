@@ -1,0 +1,2110 @@
+" vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker=@{,@} foldlevel=0 foldmethod=marker spell:
+
+" NOTE: EXECUTABLE DEPENDENCY
+" ctags, cscope, find, [ag or ack-grep or ack], python3
+
+" Environment @{
+
+    " Identify platform @{
+        silent function! OSX()
+            return has('macunix')
+        endfunction
+        silent function! LINUX()
+            return has('unix') && !has('macunix') && !has('win32unix')
+        endfunction
+        silent function! WINDOWS()
+            return  (has('win32') || has('win64'))
+        endfunction
+    " @}
+
+    " Basics @{
+        set nocompatible        " Must be first line
+        if !WINDOWS()
+            set shell=/bin/sh
+        endif
+    " @}
+
+    " Windows Compatible @{
+        " On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization
+        " across (heterogeneous) systems easier.
+        if has('win32') || has('win64')
+          set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/.vim/after
+
+          " Be nice and check for multi_byte even if the config requires
+          " multi_byte support most of the time
+          if has("multi_byte")
+            " Windows cmd.exe still uses cp850. If Windows ever moved to
+            " Powershell as the primary terminal, this would be utf-8
+            set termencoding=cp850
+            setglobal fileencoding=utf-8
+            " Windows has traditionally used cp1252, so it's probably wise to
+            " fallback into cp1252 instead of eg. iso-8859-15.
+            " Newer Windows files might contain utf-8 or utf-16 LE so we might
+            " want to try them first.
+            set fileencodings=ucs-bom,utf-8,utf-16le,cp1252,iso-8859-15
+          endif
+        endif
+    " @}
+
+    " Arrow Key Fix @{
+        if &term[:4] == "xterm" || &term[:5] == 'screen' || &term[:3] == 'rxvt'
+            inoremap <silent> <C-[>OC <RIGHT>
+        endif
+    " @}
+
+    " Setup Bundle Support @{
+        " The next three lines ensure that the ~/.vim/bundle/ system works
+        filetype off
+        set rtp+=~/.vim/bundle/vundle
+        call vundle#rc()
+    " @}
+
+    " Add an UnBundle command @{
+    function! UnBundle(arg, ...)
+      let bundle = vundle#config#init_bundle(a:arg, a:000)
+      call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
+    endfunction
+
+    com! -nargs=+         UnBundle
+    \ call UnBundle(<args>)
+    " @}
+
+    " Leader and Local Leader @{
+        let mapleader = ' '
+        let maplocalleader = '_'
+    " @}
+
+" @}
+
+" options @{
+
+    " Prevent automatically changing to open file directory
+       let g:pkk_no_autochdir = 1
+
+    " Disable views
+       let g:pkk_no_views = 1
+
+    " Disable wrap relative motion for start/end line motions
+    "   let g:pkk_no_wrapRelMotion = 1
+
+    " Clear search highlighting
+    "   let g:pkk_clear_search_highlight = 1
+
+    " Disable neosnippet expansion
+    " This maps over <C-k> and does some Supertab
+    " emulation with snippets
+    "   let g:pkk_no_neosnippet_expand = 1
+
+    " Use powerline
+    "   let g:pkk_use_powerline = 1
+
+    " Enable powerline symbols
+       let g:airline_powerline_fonts = 1
+
+    " vim files directory
+    "   let g:pkk_consolidated_directory = <full path to desired directory>
+       let g:pkk_consolidated_directory = $HOME . '/.vim/databases/'
+
+    " This makes the completion popup strictly passive.
+    " Keypresses acts normally. <ESC> takes you of insert mode, words don't
+    " automatically complete, pressing <CR> inserts a newline, etc. Iff the
+    " menu is open, tab will cycle through it. If a snippet is selected, <C-k>
+    " expands it and jumps between fields.
+    "   let g:pkk_noninvasive_completion = 1
+
+    " Don't turn conceallevel or concealcursor
+    "   let g:pkk_no_conceal = 1
+
+    " For some colorschemes, autocolor will not work (eg: 'desert', 'ir_black')
+    " Indent guides will attempt to set your colors smartly. If you
+    " want to control them yourself, do it here.
+    "   let g:indent_guides_auto_colors = 0
+    "   autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  guibg=#212121 ctermbg=233
+    "   autocmd VimEnter,Colorscheme * :hi IndentGuidesEven guibg=#404040 ctermbg=234
+
+    " Leave the default font and size in GVim
+    "   let g:pkk_no_big_font = 1
+
+    " Disable  omni complete
+    "   let g:pkk_no_omni_complete = 1
+
+    " Don't create default mappings for multicursors
+    " See :help multiple-cursors-mappings
+    "   let g:multi_cursor_use_default_mapping=0
+    "   let g:multi_cursor_next_key='<C-n>'
+    "   let g:multi_cursor_prev_key='<C-p>'
+    "   let g:multi_cursor_skip_key='<C-x>'
+    "   let g:multi_cursor_quit_key='<Esc>'
+    " Require a special keypress to enter multiple cursors mode
+    "   let g:multi_cursor_start_key='+'
+
+" @}
+
+" Bundles @{
+
+    " list only the plugin groups you will use
+    if !exists('g:pkk_bundle_groups')
+        let g:pkk_bundle_groups=['general', 'writing', 'programming', 'ultisnips', 'python', 'html',]
+    endif
+
+    " Deps @{
+        Bundle 'gmarik/vundle'
+        Bundle 'MarcWeber/vim-addon-mw-utils'
+        Bundle 'tomtom/tlib_vim'
+        if executable('ag')
+            Bundle 'mileszs/ack.vim'
+            let g:ackprg = 'ag --nogroup --nocolor --column --smart-case'
+        elseif executable('ack-grep')
+            let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+            Bundle 'mileszs/ack.vim'
+        elseif executable('ack')
+            Bundle 'mileszs/ack.vim'
+        endif
+    " @}
+
+    " General @{
+        if count(g:pkk_bundle_groups, 'general')
+            Plugin 'tpope/vim-unimpaired'
+            Plugin 'tpope/vim-dispatch'             " run tasks in background
+            Plugin 'IndexedSearch'                  " Search results counter
+            Plugin 'tmhedberg/SimpylFold'
+            Bundle 'scrooloose/nerdtree'
+            Bundle 'kshenoy/vim-signature'
+            Bundle 'altercation/vim-colors-solarized'
+            Bundle 'tpope/vim-surround'
+            Bundle 'tpope/vim-repeat'
+            Bundle 'rhysd/conflict-marker.vim'
+            Bundle 'jiangmiao/auto-pairs'
+            Bundle 'ctrlpvim/ctrlp.vim'
+            Bundle 'tacahiroy/ctrlp-funky'
+            Bundle 'terryma/vim-multiple-cursors'
+            Bundle 'vim-scripts/sessionman.vim'
+            Bundle 'matchit.zip'
+            if (has("python") || has("python3")) && exists('g:pkk_use_powerline')
+                Bundle 'Lokaltog/powerline', {'rtp':'/powerline/bindings/vim'}
+            else
+                Bundle 'vim-airline/vim-airline'
+                Bundle 'vim-airline/vim-airline-themes'
+            endif
+            Bundle 'powerline/fonts'
+            Bundle 'bling/vim-bufferline'
+            Bundle 'easymotion/vim-easymotion'
+            Bundle 'jistr/vim-nerdtree-tabs'
+            Bundle 'flazz/vim-colorschemes'
+            "Plugin 'rafi/awesome-vim-colorschemes'
+            Bundle 'mbbill/undotree'
+            Bundle 'nathanaelkane/vim-indent-guides'
+            if !exists('g:pkk_no_views')
+                Bundle 'vim-scripts/restore_view.vim'
+            endif
+            Bundle 'mhinz/vim-signify'
+            Bundle 'tpope/vim-abolish.git'
+            Bundle 'osyo-manga/vim-over'
+            Bundle 'kana/vim-textobj-user'
+            Bundle 'kana/vim-textobj-indent'
+            Bundle 'gcmt/wildfire.vim'
+            Plugin 'itchyny/vim-cursorword'
+            Plugin 'haya14busa/vim-asterisk'
+            Plugin 'rhysd/accelerated-jk'
+            Plugin 't9md/vim-quickhl'
+            Plugin 'neomake/neomake'
+        endif
+    " @}
+
+    " Writing @{
+        if count(g:pkk_bundle_groups, 'writing')
+            Plugin 'Txtfmt-The-Vim-Highlighter'     " Text highliter and formatter
+            Bundle 'reedes/vim-litecorrect'
+            Bundle 'reedes/vim-textobj-sentence'
+            Bundle 'reedes/vim-textobj-quote'
+            Bundle 'reedes/vim-wordy'
+        endif
+    " @}
+
+    " Programming @{
+        if count(g:pkk_bundle_groups, 'programming')
+            " Pick one of the checksyntax, jslint, or syntastic
+            Plugin 'vim-scripts/autoload_cscope.vim'
+            Plugin 'ctags.vim'                      " Use ctags
+            Plugin 'vim-syntastic/syntastic'
+            Bundle 'tpope/vim-fugitive'
+            Bundle 'mattn/webapi-vim'
+            Bundle 'mattn/gist-vim'
+            Bundle 'scrooloose/nerdcommenter'
+            Bundle 'tpope/vim-commentary'
+            Bundle 'godlygeek/tabular'
+            Bundle 'luochen1990/rainbow'
+            Plugin 'hari-rangarajan/CCTree'
+            "Plugin 'bash-support.vim'               " support for writing bash scripts
+            "Plugin 'c.vim'                          " C - language support
+
+            if executable('ctags')
+                Bundle 'majutsushi/tagbar'
+            endif
+        endif
+    " @}
+
+    " Snippets & AutoComplete @{
+        if count(g:pkk_bundle_groups, 'deoplete')
+            Plugin 'Shougo/deoplete.nvim'
+            Plugin 'roxma/vim-hug-neovim-rpc'
+            Plugin 'zchee/deoplete-clang'
+            Plugin 'roxma/nvim-yarp'
+        elseif count(g:pkk_bundle_groups, 'snipmate')
+            Bundle 'garbas/vim-snipmate'
+            Bundle 'honza/vim-snippets'
+            " Source support_function.vim to support vim-snippets.
+            if filereadable(expand("~/.vim/bundle/vim-snippets/snippets/support_functions.vim"))
+                source ~/.vim/bundle/vim-snippets/snippets/support_functions.vim
+            endif
+        elseif count(g:pkk_bundle_groups, 'ultisnips')
+            Bundle 'SirVer/ultisnips'
+            Bundle 'honza/vim-snippets'
+        elseif count(g:pkk_bundle_groups, 'youcompleteme')
+            Bundle 'Valloric/YouCompleteMe'
+            Bundle 'SirVer/ultisnips'
+            Bundle 'honza/vim-snippets'
+        elseif count(g:pkk_bundle_groups, 'neocomplcache')
+            Bundle 'Shougo/neocomplcache'
+            Bundle 'Shougo/neosnippet'
+            Bundle 'Shougo/neosnippet-snippets'
+            Bundle 'honza/vim-snippets'
+        elseif count(g:pkk_bundle_groups, 'neocomplete')
+            Bundle 'Shougo/neocomplete.vim.git'
+            Bundle 'Shougo/neosnippet'
+            Bundle 'Shougo/neosnippet-snippets'
+            Bundle 'honza/vim-snippets'
+        endif
+    " @}
+
+    " Python @{
+        if count(g:pkk_bundle_groups, 'python')
+            " Pick either python-mode or pyflakes & pydoc
+            Plugin 'davidhalter/jedi-vim'
+            Plugin 'vim-scripts/indentpython.vim' " Python indent handling
+            Plugin 'joonty/vdebug'
+            " Provides some utility select, move and modify code.
+            Bundle 'yssource/python.vim'
+            " Jump to if else end, for break,
+            Bundle 'python_match.vim'
+            " Autocomplete. dynamic type deduction and etc.
+            Bundle 'pythoncomplete'
+            "Bundle 'klen/python-mode'
+            "Plugin 'nvie/vim-flake8'            " PEP8 checking
+        endif
+    " @}
+
+    " HTML @{
+        if count(g:pkk_bundle_groups, 'html')
+            Bundle 'hail2u/vim-css3-syntax'
+            Bundle 'gorodinskiy/vim-coloresque'
+            Bundle 'tpope/vim-haml'
+            Bundle 'mattn/emmet-vim'
+        endif
+    " @}
+
+    " Ruby @{
+        if count(g:pkk_bundle_groups, 'ruby')
+            Bundle 'tpope/vim-cucumber'
+            Bundle 'tpope/vim-rails'
+            let g:rubycomplete_buffer_loading = 1
+            let g:rubycomplete_classes_in_global = 1
+            let g:rubycomplete_rails = 1
+        endif
+    " @}
+
+    " Javascript @{
+        if count(g:pkk_bundle_groups, 'javascript')
+            Bundle 'elzr/vim-json'
+            Bundle 'groenewege/vim-less'
+            Bundle 'pangloss/vim-javascript'
+            Bundle 'briancollins/vim-jst'
+            Bundle 'kchmck/vim-coffee-script'
+        endif
+    " @}
+
+    " PHP @{
+        if count(g:pkk_bundle_groups, 'php')
+            Bundle 'vim-scripts/PIV'
+            Bundle 'arnaud-lb/vim-php-namespace'
+            Bundle 'beyondwords/vim-twig'
+        endif
+    " @}
+
+    " Scala @{
+        if count(g:pkk_bundle_groups, 'scala')
+            Bundle 'derekwyatt/vim-scala'
+            Bundle 'derekwyatt/vim-sbt'
+            Bundle 'xptemplate'
+        endif
+    " @}
+
+    " Haskell @{
+        if count(g:pkk_bundle_groups, 'haskell')
+            Bundle 'travitch/hasksyn'
+            Bundle 'dag/vim2hs'
+            Bundle 'Twinside/vim-haskellConceal'
+            Bundle 'Twinside/vim-haskellFold'
+            Bundle 'lukerandall/haskellmode-vim'
+            Bundle 'eagletmt/neco-ghc'
+            Bundle 'eagletmt/ghcmod-vim'
+            Bundle 'Shougo/vimproc.vim'
+            Bundle 'adinapoli/cumino'
+            Bundle 'bitc/vim-hdevtools'
+        endif
+    " @}
+
+    " Puppet @{
+        if count(g:pkk_bundle_groups, 'puppet')
+            Bundle 'rodjek/vim-puppet'
+        endif
+    " @}
+
+    " Go Lang @{
+        if count(g:pkk_bundle_groups, 'go')
+            Bundle 'Blackrush/vim-gocode'
+            Bundle 'fatih/vim-go'
+        endif
+    " @}
+
+    " Elixir @{
+        if count(g:pkk_bundle_groups, 'elixir')
+            Bundle 'elixir-lang/vim-elixir'
+            Bundle 'carlosgaldino/elixir-snippets'
+            Bundle 'mattreduce/vim-mix'
+        endif
+    " @}
+
+    " Misc @{
+        if count(g:pkk_bundle_groups, 'misc')
+            Bundle 'rust-lang/rust.vim'
+            Bundle 'tpope/vim-markdown'
+            Bundle 'greyblake/vim-preview'  "Preview for markdow language
+            Bundle 'cespare/vim-toml'       "Syntax highlighting for TOML
+            Bundle 'saltstack/salt-vim'     "Vim files for working on Salt files
+        endif
+    " @}
+
+    " Linux specific @{
+        if LINUX()
+            Plugin 'christoomey/vim-tmux-navigator'
+        endif
+    " @}
+" @}
+
+" Plugins settings @{
+
+    " Cscope @{
+        set cscopetag       " Use both cscope and ctag tagfiles
+
+        " The following maps all invoke one of the following cscope search types:
+        "   's'   symbol: find all references to the token under cursor
+        "   'g'   global: find global definition(s) of the token under cursor
+        "   'c'   calls:  find all calls to the function name under cursor
+        "   't'   text:   find all instances of the text under cursor
+        "   'e'   egrep:  egrep search for the word under cursor
+        "   'f'   file:   open the filename under cursor
+        "   'i'   includes: find files that include the filename under cursor
+        "   'd'   called: find functions that function under cursor calls
+
+        " To do the first type of search, hit 'CTRL-\', followed by one of the
+        " cscope search types above (s,g,c,t,e,f,i,d).  The result of your cscope
+        " search will be displayed in the current window.  You can use CTRL-T to
+        " go back to where you were before the search.
+        silent! map <unique> <C-\>s :cs find s <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>g :cs find g <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>d :cs find d <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>c :cs find c <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>t :cs find t <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>e :cs find e <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>f :cs find f <C-R>=expand("<cword>")<CR><CR>
+        silent! map <unique> <C-\>i :cs find i <C-R>=expand("<cword>")<CR><CR>
+
+        " Using 'CTRL-spacebar' (intepreted as CTRL-@ by vim) then a search type
+        " makes the vim window split horizontally, with search result displayed in
+        " the new window.
+        nmap <C-@>s :scs find s <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@>g :scs find g <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@>c :scs find c <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@>t :scs find t <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@>e :scs find e <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@>f :scs find f <C-R>=expand("<cfile>")<CR><CR>
+        nmap <C-@>i :scs find i <C-R>=expand("<cfile>")<CR><CR>
+        nmap <C-@>d :scs find d <C-R>=expand("<cword>")<CR><CR>
+
+        " Hitting CTRL-space *twice* before the search type does a vertical
+        " split instead of a horizontal one (vim 6 and up only)
+        nmap <C-@><C-@>s :vert scs find s <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@><C-@>g :vert scs find g <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@><C-@>c :vert scs find c <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@><C-@>t :vert scs find t <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@><C-@>e :vert scs find e <C-R>=expand("<cword>")<CR><CR>
+        nmap <C-@><C-@>f :vert scs find f <C-R>=expand("<cfile>")<CR><CR>
+        nmap <C-@><C-@>i :vert scs find i <C-R>=expand("<cfile>")<CR><CR>
+        nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
+    " @}
+
+    " PyMode @{
+        " Disable if python support not present
+        if !has('python') && !has('python3')
+            let g:pymode = 0
+        else
+            let g:pymode = 1
+        endif
+
+        if isdirectory(expand("~/.vim/bundle/python-mode"))
+            let g:pymode_lint_checkers = ['pyflakes']
+            let g:pymode_lint_on_write = 0
+            let g:pymode_trim_whitespaces = 1
+            let g:pymode_options = 1
+            let g:pymode_rope = 1
+            let g:pymode_options_colorcolumn = 1 " Display a verticle line at 80 character
+
+            "Set pymode to use python3 interpreter
+            let g:pymode_python = 'python3'
+            let g:pymode_virtualenv_path = "/home/praveen/anaconda3/"
+
+            " Override go-to.definition key shortcut to Ctrl-]
+            let g:pymode_rope_goto_definition_bind = "<C-]>"
+            " Override view python doc key shortcut to Ctrl-Shift-d
+            let g:pymode_doc = 1
+            let g:pymode_doc_bind = "<C-S-d>"
+
+            "Setup pymode |quickfix| window
+            let g:pymode_quickfix_minheight = 3
+            let g:pymode_quickfix_maxheight = 6
+
+            let g:pymode_indent = 1
+            let g:pymode_folding = 1
+
+            "Enable vim motion
+            let g:pymode_motion = 1
+
+            "Enable breakpoint
+            let g:pymode_breakpoint = 1
+            let g:pymode_breakpoint_bind = '<leader>b'
+            let g:pymode_breakpoint_cmd = 'import ipdb; ipdb.set_trace()'
+        endif
+
+        "insert pdb set_trace
+        "nnoremap <leader>b Oimport ipdb; ipdb.set_trace()<Esc>
+    " @}
+
+    " SnipMate @{
+        " Setting the author var
+        let g:snips_author = 'Praveen Kumar K <praveenkumark1508@gmail.com>'
+    " @}
+
+    " Ultisnips @{
+        let g:UltiSnipsExpandTrigger="<tab>"
+        let g:UltiSnipsJumpForwardTrigger="<tab>"
+        let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+    " @}
+
+    " ctrlp @{
+        if isdirectory(expand("~/.vim/bundle/ctrlp.vim/"))
+            if executable('ag')
+                let s:ctrlp_fallback = 'ag %s --nocolor -l -g ""'
+            elseif executable('ack-grep')
+                let s:ctrlp_fallback = 'ack-grep %s --nocolor -f'
+            elseif executable('ack')
+                let s:ctrlp_fallback = 'ack %s --nocolor -f'
+            " On Windows use "dir" as fallback command.
+            elseif WINDOWS()
+                let s:ctrlp_fallback = 'dir %s /-n /b /s /a-d'
+            else
+                let s:ctrlp_fallback = 'find %s -type f'
+            endif
+
+            nnoremap <silent> <C-m> :CtrlPMRU<CR>
+            let g:ctrlp_custom_ignore = {
+                \ 'dir':  '\.git$\|\.hg$\|\.svn$\|_builds$',
+                \ 'file': '\.exe$\|\.so$\|\.dll$\|\.pyc$' }
+
+            if LINUX()
+                let g:ctrlp_root_markers = ['.git', '.svn', '.bzr', '_darcs']
+            elseif WINDOWS()
+                let g:ctrlp_root_markers = ['generatedFiles', '_builds']    " For NRCS2 project
+            endif
+
+            let g:ctrlp_working_path_mode = 'ra'
+            let g:ctrlp_show_hidden = 1
+            let g:ctrlp_cache_dir = $HOME.'/.vim/.cache/ctrlp'
+            let g:ctrlp_max_files=0
+            let g:ctrlp_max_depth=40
+            let g:ctrlp_match_window = 'bottom,order:btt,min:1,max:30,results:30'
+
+            "if exists("g:ctrlp_user_command")
+                "unlet g:ctrlp_user_command
+            "endif
+            "let g:ctrlp_user_command = {
+                "\ 'types': {
+                    "\ 1: ['.git', 'cd %s && git ls-files . --cached --exclude-standard --others'],
+                    "\ 2: ['.hg', 'hg --cwd %s locate -I .'],
+                "\ },
+                "\ 'fallback': s:ctrlp_fallback
+            "\ }
+
+            if isdirectory(expand("~/.vim/bundle/ctrlp-funky/"))
+                " CtrlP extensions
+                let g:ctrlp_extensions = ['funky']
+
+                "funky
+                nnoremap <Leader>fu :CtrlPFunky<Cr>
+            endif
+        endif
+    "@}
+
+    " vim-airline @{
+        if !exists('g:pkk_use_powerline')
+            " Enable Tabline and Disable bufferline
+            let g:airline#extensions#tabline#enabled = 1
+            let g:airline#extensions#tabline#show_buffers = 0
+            let g:airline#extensions#tabline#show_splits = 0
+            let g:airline#extensions#tabline#show_tabs = 1
+            let g:airline#extensions#tabline#show_tab_type = 0
+            let g:airline#extensions#tabline#close_symbol = '×'
+            let g:airline#extensions#tabline#show_close_button = 0
+
+            " Tabline settings
+            let g:airline_skip_empty_sections = 1
+            let g:airline#extensions#tabline#tab_nr_type = 1 " tab number
+            let g:airline#extensions#tabline#show_tab_nr = 1
+            let g:airline#extensions#tabline#keymap_ignored_filetypes = ['vimfiler', 'nerdtree']
+            let g:airline#extensions#tabline#fnamemod = ':t:.'
+
+            " Statusline settings
+            function! AirlineInit()
+                let g:airline_section_a = airline#section#create(['mode'])
+                let g:airline_section_b = airline#section#create(['branch'])
+                let g:airline_section_c = airline#section#create(['%-0.15{getcwd()}'])
+                let g:airline_section_x = airline#section#create(['ffenc'])
+                let g:airline_section_y = airline#section#create(['filetype'])
+            endfunction
+            autocmd VimEnter * call AirlineInit()
+
+            " See `:echo g:airline_theme_map` for some more choices
+            " Default in terminal vim is 'dark'
+            if isdirectory(expand("~/.vim/bundle/vim-airline-themes/"))
+                if !exists('g:airline_powerline_fonts')
+                    " Use the default set of separators with a few customizations
+                    let g:airline_left_sep='›'  " Slightly fancier than '>'
+                    let g:airline_right_sep='‹' " Slightly fancier than '<'
+                endif
+
+                let g:airline_theme = 'powerlineish'
+                let g:airline_theme_patch_func = 'AirlineThemePatch'
+                function! AirlineThemePatch(palette)
+                    " Theme Patching
+                    " Colour palette
+                    "          [GUI-FG,  GUI-BG, CTERM-FG, CTERM-BG]
+                    let s:BB = ['#ffffff', '#585858', '231', '240'] " Branch and file format blocks
+                    let s:N1 = ['#000000', '#afd700', '16', '148'] " Outside blocks in normal mode
+                    let s:N2 = ['#808080', '#303030', '244', '236'] " Middle block
+
+                    for colors in values(a:palette.inactive)
+                    if &background == 'light'
+                        let colors[3] = 235
+                    elseif &background == 'dark'
+                        let colors[3] = 250
+                    endif
+                    endfor
+                    let a:palette.normal = airline#themes#generate_color_map(s:N1, s:BB, s:N2)
+                    let a:palette.normal.airline_warning = ['#000000', '#d78700', 0, 172]
+                    let a:palette.normal.airline_error = ['#000000', '#d70000', 0, 160]
+                endfunction
+            endif
+        endif
+    " @}
+
+    " NerdTree @{
+        if isdirectory(expand("~/.vim/bundle/nerdtree"))
+            map <C-e> <plug>NERDTreeMirrorToggle<CR>
+            nmap <leader>nt :NERDTreeFind<CR>
+
+            let NERDTreeShowBookmarks=1
+            let NERDTreeRespectWildIgnore=1
+            let NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+            let NERDTreeChDirMode=0
+            let NERDTreeMouseMode=2
+            " let NERDTreeShowHidden=1
+            let NERDTreeWinPos="left"
+            let NERDTreeWinSize=30
+            let NERDTreeCascadeSingleChildDir=1
+            let NERDTreeCascadeOpenSingleChildDir=1
+            let NERDTreeAutoDeleteBuffer=1
+            let NERDTreeSortOrder=['\.c$', '\.cpp$', '\.h$', '\.hpp$', '\.py$', '\.pyw$', '\.vim$', '*']
+            let g:nerdtree_tabs_open_on_gui_startup=1
+            let g:nerdtree_tabs_open_on_console_startup=1
+            let g:nerdtree_tabs_no_startup_for_diff=1
+            let g:nerdtree_tabs_autoclose=1
+            let g:nerdtree_tabs_meaningful_tab_names=1
+            let g:nerdtree_tabs_open_on_new_tab=1
+            let g:nerdtree_tabs_synchronize_view=1
+
+            let NERDTreeMapOpenVSplit='v'
+            let NERDTreeMapOpenSplit='s'
+        endif
+    " @}
+
+    " NERDCommenter @{
+        let g:NERDShutUp=1
+
+        " Add spaces after comment delimiters by default
+        let g:NERDSpaceDelims = 1
+
+        " Use compact syntax for prettified multi-line comments
+        let g:NERDCompactSexyComs = 1
+
+        " Align line-wise comment delimiters flush left instead of following code indentation
+        let g:NERDDefaultAlign = 'left'
+
+        " Add your own custom formats or override the defaults
+        let g:NERDCustomDelimiters = { 'c': { 'left': '/**','right': '*/' } }
+
+        " Allow commenting and inverting empty lines (useful when commenting a region)
+        let g:NERDCommentEmptyLines = 0
+
+        " Enable trimming of trailing whitespace when uncommenting
+        let g:NERDTrimTrailingWhitespace = 1
+    " @}
+
+    " TagBar @{
+        if isdirectory(expand("~/.vim/bundle/tagbar/"))
+            if !&diff
+                autocmd FileType * nested :call tagbar#autoopen(0)
+                autocmd BufEnter * nested :call tagbar#autoopen(0)
+            endif
+            nnoremap <silent> <leader>tt :TagbarToggle<CR>
+            let g:tagbar_width = 30
+        endif
+    "@}
+
+    " Syntastic  @{
+        set statusline+=%#warningmsg#
+        set statusline+=%{SyntasticStatuslineFlag()}
+        set statusline+=%*
+
+        let g:syntastic_c_include_dirs = [ "../include", "include", "../inc", "/usr/src/linux-headers-4.10.0-32/include/", "/usr/src/linux-headers-4.10.0-32-generic/include/" ]
+        let g:syntastic_always_populate_loc_list = 1
+        let g:syntastic_auto_loc_list = 1
+        let g:syntastic_check_on_open = 0
+        let g:syntastic_check_on_wq = 0
+        " let g:syntastic_enable_elixir_checker = 1
+        " let g:syntastic_elixir_checkers = ["elixir"]
+
+        function! SyntasticCheckHook(errors)
+            if !empty(a:errors)
+                let g:syntastic_loc_list_height = min([len(a:errors), 10])+1
+            endif
+        endfunction
+    " @}
+
+    " quickhl @{
+        nmap <Space>m <Plug>(quickhl-manual-this)
+        xmap <Space>m <Plug>(quickhl-manual-this)
+
+        nmap <Space>w <Plug>(quickhl-manual-this-whole-word)
+        xmap <Space>w <Plug>(quickhl-manual-this-whole-word)
+
+        nmap <Space>c <Plug>(quickhl-manual-clear)
+        vmap <Space>c <Plug>(quickhl-manual-clear)
+
+        nmap <Space>M <Plug>(quickhl-manual-reset)
+        xmap <Space>M <Plug>(quickhl-manual-reset)
+
+        nmap <Space>j <Plug>(quickhl-cword-toggle)
+        nmap <Space>] <Plug>(quickhl-tag-toggle)
+        map H <Plug>(operator-quickhl-manual-this-motion)
+    " @}
+
+    " RainbowParentheses @{
+        if isdirectory(expand("~/.vim/bundle/rainbow/"))
+            let g:rainbow_active = 1 "0 if you want to enable it later via :RainbowToggle
+
+            nnoremap <leader>rp :RainbowToggle<CR>       " Toggle it on/off
+        endif
+" @}
+
+    " GoLang @{
+        if count(g:pkk_bundle_groups, 'go')
+            let g:go_highlight_functions = 1
+            let g:go_highlight_methods = 1
+            let g:go_highlight_structs = 1
+            let g:go_highlight_operators = 1
+            let g:go_highlight_build_constraints = 1
+            let g:go_fmt_command = "goimports"
+            let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
+            let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
+            au FileType go nmap <Leader>s <Plug>(go-implements)
+            au FileType go nmap <Leader>i <Plug>(go-info)
+            au FileType go nmap <Leader>e <Plug>(go-rename)
+            au FileType go nmap <leader>r <Plug>(go-run)
+            au FileType go nmap <leader>b <Plug>(go-build)
+            au FileType go nmap <leader>t <Plug>(go-test)
+            au FileType go nmap <Leader>gd <Plug>(go-doc)
+            au FileType go nmap <Leader>gv <Plug>(go-doc-vertical)
+            au FileType go nmap <leader>co <Plug>(go-coverage)
+        endif
+        " @}
+
+    " TextObj Sentence @{
+        if count(g:pkk_bundle_groups, 'writing')
+            augroup textobj_sentence
+              autocmd!
+              autocmd FileType markdown call textobj#sentence#init()
+              autocmd FileType textile call textobj#sentence#init()
+              autocmd FileType text call textobj#sentence#init()
+            augroup END
+        endif
+    " @}
+
+    " TextObj Quote @{
+        if count(g:pkk_bundle_groups, 'writing')
+            augroup textobj_quote
+                autocmd!
+                autocmd FileType markdown call textobj#quote#init()
+                autocmd FileType textile call textobj#quote#init()
+                autocmd FileType text call textobj#quote#init({'educate': 0})
+            augroup END
+        endif
+    " @}
+
+    " PIV @{
+        if isdirectory(expand("~/.vim/bundle/PIV"))
+            let g:DisableAutoPHPFolding = 0
+            let g:PIVAutoClose = 0
+        endif
+    " @}
+
+    " matchit @{
+        if isdirectory(expand("~/.vim/bundle/matchit.zip"))
+            let b:match_ignorecase = 1
+        endif
+    " @}
+
+    " OmniComplete @{
+        "   let g:pkk_no_omni_complete = 1
+        if !exists('g:pkk_no_omni_complete')
+            if has("autocmd") && exists("+omnifunc")
+                autocmd Filetype *
+                    \if &omnifunc == "" |
+                    \setlocal omnifunc=syntaxcomplete#Complete |
+                    \endif
+            endif
+
+            hi Pmenu  guifg=#000000 guibg=#F8F8F8 ctermfg=black ctermbg=Lightgray
+            hi PmenuSbar  guifg=#8A95A7 guibg=#F8F8F8 gui=NONE ctermfg=darkcyan ctermbg=lightgray cterm=NONE
+            hi PmenuThumb  guifg=#F8F8F8 guibg=#8A95A7 gui=NONE ctermfg=lightgray ctermbg=darkcyan cterm=NONE
+
+            " Some convenient mappings
+            "inoremap <expr> <Esc>      pumvisible() ? "\<C-e>" : "\<Esc>"
+            if exists('g:pkk_map_cr_omni_complete')
+                inoremap <expr> <CR>     pumvisible() ? "\<C-y>" : "\<CR>"
+            endif
+            inoremap <expr> <Down>     pumvisible() ? "\<C-n>" : "\<Down>"
+            inoremap <expr> <Up>       pumvisible() ? "\<C-p>" : "\<Up>"
+            inoremap <expr> <C-d>      pumvisible() ? "\<PageDown>\<C-p>\<C-n>" : "\<C-d>"
+            inoremap <expr> <C-u>      pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<C-u>"
+
+            " Automatically open and close the popup menu / preview window
+            au CursorMovedI,InsertLeave * if pumvisible() == 0|silent! pclose|endif
+            set completeopt=menu,preview,longest
+        endif
+    " @}
+
+    " Ctags @{
+        set tags=./tags;/,~/.vimtags
+
+        " Make tags placed in .git/tags file available in all levels of a repository
+        let gitroot = substitute(system('git rev-parse --show-toplevel'), '[\n\r]', '', 'g')
+        if gitroot != ''
+            let &tags = &tags . ',' . gitroot . '/.git/tags'
+        endif
+    " @}
+
+    " Tabularize @{
+        if isdirectory(expand("~/.vim/bundle/tabular"))
+            nmap <Leader>a& :Tabularize /&<CR>
+            vmap <Leader>a& :Tabularize /&<CR>
+            nmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+            vmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
+            nmap <Leader>a=> :Tabularize /=><CR>
+            vmap <Leader>a=> :Tabularize /=><CR>
+            nmap <Leader>a: :Tabularize /:<CR>
+            vmap <Leader>a: :Tabularize /:<CR>
+            nmap <Leader>a:: :Tabularize /:\zs<CR>
+            vmap <Leader>a:: :Tabularize /:\zs<CR>
+            nmap <Leader>a, :Tabularize /,<CR>
+            vmap <Leader>a, :Tabularize /,<CR>
+            nmap <Leader>a,, :Tabularize /,\zs<CR>
+            vmap <Leader>a,, :Tabularize /,\zs<CR>
+            nmap <Leader>a<Bar> :Tabularize /<Bar><CR>
+            vmap <Leader>a<Bar> :Tabularize /<Bar><CR>
+        endif
+    " @}
+
+    " Session List @{
+        set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
+        if isdirectory(expand("~/.vim/bundle/sessionman.vim/"))
+            nmap <leader>sl :SessionList<CR>
+            nmap <leader>ss :SessionSave<CR>
+            nmap <leader>sc :SessionClose<CR>
+        endif
+    " @}
+
+    " JSON @{
+        nmap <leader>jt <Esc>:%!python -m json.tool<CR><Esc>:set filetype=json<CR>
+        let g:vim_json_syntax_conceal = 0
+    " @}
+
+    " Fugitive @{
+        if isdirectory(expand("~/.vim/bundle/vim-fugitive/"))
+            nnoremap <silent> <leader>gs :Gstatus<CR>
+            nnoremap <silent> <leader>gd :Gdiff<CR>
+            nnoremap <silent> <leader>gc :Gcommit<CR>
+            nnoremap <silent> <leader>gb :Gblame<CR>
+            nnoremap <silent> <leader>gl :Glog<CR>
+            nnoremap <silent> <leader>gp :Git push<CR>
+            nnoremap <silent> <leader>gr :Gread<CR>
+            nnoremap <silent> <leader>gw :Gwrite<CR>
+            nnoremap <silent> <leader>ge :Gedit<CR>
+            " Mnemonic _i_nteractive
+            nnoremap <silent> <leader>gi :Git add -p %<CR>
+            nnoremap <silent> <leader>gg :SignifyToggle<CR>
+        endif
+    "@}
+
+    " YouCompleteMe @{
+        if count(g:pkk_bundle_groups, 'youcompleteme')
+            let g:acp_enableAtStartup = 0
+
+            " enable completion from tags
+            let g:ycm_collect_identifiers_from_tags_files = 1
+
+            let g:ycm_autoclose_preview_window_after_completion=1
+
+            " remap Ultisnips for compatibility for YCM
+            let g:UltiSnipsExpandTrigger = '<C-j>'
+            let g:UltiSnipsJumpForwardTrigger = '<C-j>'
+            let g:UltiSnipsJumpBackwardTrigger = '<C-k>'
+            let g:UltiSnipsEditSplit="vertical" " If you want :UltiSnipsEdit to split your window.
+
+            " Enable omni completion.
+            autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+            autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+            autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+            autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+            autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+            autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+            autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+
+            " Haskell post write lint and check with ghcmod
+            " $ `cabal install ghcmod` if missing and ensure
+            " ~/.cabal/bin is in your $PATH.
+            if !executable("ghcmod")
+                autocmd BufWritePost *.hs GhcModCheckAndLintAsync
+            endif
+
+            " For snippet_complete marker.
+            if !exists("g:pkk_no_conceal")
+                if has('conceal')
+                    set conceallevel=2 concealcursor=i
+                endif
+            endif
+
+            au FileType python map <C-]>  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+
+            " Disable the neosnippet preview candidate window
+            " When enabled, there can be too much visual noise
+            " especially when splits are used.
+            set completeopt-=preview
+        endif
+    " @}
+
+    " neocomplete @{
+        if count(g:pkk_bundle_groups, 'neocomplete')
+            let g:acp_enableAtStartup = 0
+            let g:neocomplete#enable_at_startup = 1
+            let g:neocomplete#enable_smart_case = 1
+            let g:neocomplete#enable_auto_delimiter = 1
+            let g:neocomplete#max_list = 15
+            let g:neocomplete#force_overwrite_completefunc = 1
+
+
+            " Define dictionary.
+            let g:neocomplete#sources#dictionary#dictionaries = {
+                        \ 'default' : '',
+                        \ 'vimshell' : $HOME.'/.vimshell_hist',
+                        \ 'scheme' : $HOME.'/.gosh_completions'
+                        \ }
+
+            " Define keyword.
+            if !exists('g:neocomplete#keyword_patterns')
+                let g:neocomplete#keyword_patterns = {}
+            endif
+            let g:neocomplete#keyword_patterns['default'] = '\h\w*'
+
+            " Plugin key-mappings @{
+                " These two lines conflict with the default digraph mapping of <C-K>
+                if !exists('g:pkk_no_neosnippet_expand')
+                    imap <C-k> <Plug>(neosnippet_expand_or_jump)
+                    smap <C-k> <Plug>(neosnippet_expand_or_jump)
+                endif
+                if exists('g:pkk_noninvasive_completion')
+                    inoremap <CR> <CR>
+                    " <ESC> takes you out of insert mode
+                    inoremap <expr> <Esc>   pumvisible() ? "\<C-y>\<Esc>" : "\<Esc>"
+                    " <CR> accepts first, then sends the <CR>
+                    inoremap <expr> <CR>    pumvisible() ? "\<C-y>\<CR>" : "\<CR>"
+                    " <Down> and <Up> cycle like <Tab> and <S-Tab>
+                    inoremap <expr> <Down>  pumvisible() ? "\<C-n>" : "\<Down>"
+                    inoremap <expr> <Up>    pumvisible() ? "\<C-p>" : "\<Up>"
+                    " Jump up and down the list
+                    inoremap <expr> <C-d>   pumvisible() ? "\<PageDown>\<C-p>\<C-n>" : "\<C-d>"
+                    inoremap <expr> <C-u>   pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<C-u>"
+                else
+                    " <C-k> Complete Snippet
+                    " <C-k> Jump to next snippet point
+                    imap <silent><expr><C-k> neosnippet#expandable() ?
+                                \ "\<Plug>(neosnippet_expand_or_jump)" : (pumvisible() ?
+                                \ "\<C-e>" : "\<Plug>(neosnippet_expand_or_jump)")
+                    smap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
+
+                    inoremap <expr><C-g> neocomplete#undo_completion()
+                    inoremap <expr><C-l> neocomplete#complete_common_string()
+                    "inoremap <expr><CR> neocomplete#complete_common_string()
+
+                    " <CR>: close popup
+                    " <s-CR>: close popup and save indent.
+                    inoremap <expr><s-CR> pumvisible() ? neocomplete#smart_close_popup()."\<CR>" : "\<CR>"
+
+                    function! CleverCr()
+                        if pumvisible()
+                            if neosnippet#expandable()
+                                let exp = "\<Plug>(neosnippet_expand)"
+                                return exp . neocomplete#smart_close_popup()
+                            else
+                                return neocomplete#smart_close_popup()
+                            endif
+                        else
+                            return "\<CR>"
+                        endif
+                    endfunction
+
+                    " <CR> close popup and save indent or expand snippet
+                    imap <expr> <CR> CleverCr()
+                    " <C-h>, <BS>: close popup and delete backword char.
+                    inoremap <expr><BS> neocomplete#smart_close_popup()."\<C-h>"
+                    inoremap <expr><C-y> neocomplete#smart_close_popup()
+                endif
+                " <TAB>: completion.
+                inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+                inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<TAB>"
+
+                " Courtesy of Matteo Cavalleri
+
+                function! CleverTab()
+                    if pumvisible()
+                        return "\<C-n>"
+                    endif
+                    let substr = strpart(getline('.'), 0, col('.') - 1)
+                    let substr = matchstr(substr, '[^ \t]*$')
+                    if strlen(substr) == 0
+                        " nothing to match on empty string
+                        return "\<Tab>"
+                    else
+                        " existing text matching
+                        if neosnippet#expandable_or_jumpable()
+                            return "\<Plug>(neosnippet_expand_or_jump)"
+                        else
+                            return neocomplete#start_manual_complete()
+                        endif
+                    endif
+                endfunction
+
+                imap <expr> <Tab> CleverTab()
+            " @}
+
+            " Enable heavy omni completion.
+            if !exists('g:neocomplete#sources#omni#input_patterns')
+                let g:neocomplete#sources#omni#input_patterns = {}
+            endif
+            let g:neocomplete#sources#omni#input_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
+            let g:neocomplete#sources#omni#input_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
+            let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
+            let g:neocomplete#sources#omni#input_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
+            let g:neocomplete#sources#omni#input_patterns.ruby = '[^. *\t]\.\h\w*\|\h\w*::'
+    " @}
+
+    " neocomplcache @{
+        elseif count(g:pkk_bundle_groups, 'neocomplcache')
+            let g:acp_enableAtStartup = 0
+            let g:neocomplcache_enable_at_startup = 1
+            let g:neocomplcache_enable_camel_case_completion = 1
+            let g:neocomplcache_enable_smart_case = 1
+            let g:neocomplcache_enable_underbar_completion = 1
+            let g:neocomplcache_enable_auto_delimiter = 1
+            let g:neocomplcache_max_list = 15
+            let g:neocomplcache_force_overwrite_completefunc = 1
+
+            " Define dictionary.
+            let g:neocomplcache_dictionary_filetype_lists = {
+                        \ 'default' : '',
+                        \ 'vimshell' : $HOME.'/.vimshell_hist',
+                        \ 'scheme' : $HOME.'/.gosh_completions'
+                        \ }
+
+            " Define keyword.
+            if !exists('g:neocomplcache_keyword_patterns')
+                let g:neocomplcache_keyword_patterns = {}
+            endif
+            let g:neocomplcache_keyword_patterns._ = '\h\w*'
+
+            " Plugin key-mappings @{
+                " These two lines conflict with the default digraph mapping of <C-K>
+                imap <C-k> <Plug>(neosnippet_expand_or_jump)
+                smap <C-k> <Plug>(neosnippet_expand_or_jump)
+                if exists('g:pkk_noninvasive_completion')
+                    inoremap <CR> <CR>
+                    " <ESC> takes you out of insert mode
+                    inoremap <expr> <Esc>   pumvisible() ? "\<C-y>\<Esc>" : "\<Esc>"
+                    " <CR> accepts first, then sends the <CR>
+                    inoremap <expr> <CR>    pumvisible() ? "\<C-y>\<CR>" : "\<CR>"
+                    " <Down> and <Up> cycle like <Tab> and <S-Tab>
+                    inoremap <expr> <Down>  pumvisible() ? "\<C-n>" : "\<Down>"
+                    inoremap <expr> <Up>    pumvisible() ? "\<C-p>" : "\<Up>"
+                    " Jump up and down the list
+                    inoremap <expr> <C-d>   pumvisible() ? "\<PageDown>\<C-p>\<C-n>" : "\<C-d>"
+                    inoremap <expr> <C-u>   pumvisible() ? "\<PageUp>\<C-p>\<C-n>" : "\<C-u>"
+                else
+                    imap <silent><expr><C-k> neosnippet#expandable() ?
+                                \ "\<Plug>(neosnippet_expand_or_jump)" : (pumvisible() ?
+                                \ "\<C-e>" : "\<Plug>(neosnippet_expand_or_jump)")
+                    smap <TAB> <Right><Plug>(neosnippet_jump_or_expand)
+
+                    inoremap <expr><C-g> neocomplcache#undo_completion()
+                    inoremap <expr><C-l> neocomplcache#complete_common_string()
+                    "inoremap <expr><CR> neocomplcache#complete_common_string()
+
+                    function! CleverCr()
+                        if pumvisible()
+                            if neosnippet#expandable()
+                                let exp = "\<Plug>(neosnippet_expand)"
+                                return exp . neocomplcache#close_popup()
+                            else
+                                return neocomplcache#close_popup()
+                            endif
+                        else
+                            return "\<CR>"
+                        endif
+                    endfunction
+
+                    " <CR> close popup and save indent or expand snippet
+                    imap <expr> <CR> CleverCr()
+
+                    " <CR>: close popup
+                    " <s-CR>: close popup and save indent.
+                    inoremap <expr><s-CR> pumvisible() ? neocomplcache#close_popup()."\<CR>" : "\<CR>"
+                    "inoremap <expr><CR> pumvisible() ? neocomplcache#close_popup() : "\<CR>"
+
+                    " <C-h>, <BS>: close popup and delete backword char.
+                    inoremap <expr><BS> neocomplcache#smart_close_popup()."\<C-h>"
+                    inoremap <expr><C-y> neocomplcache#close_popup()
+                endif
+                " <TAB>: completion.
+                inoremap <expr><TAB> pumvisible() ? "\<C-n>" : "\<TAB>"
+                inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<TAB>"
+            " @}
+
+            " Enable omni completion.
+            autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+            autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+            autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+            autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+            autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+            autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+            autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+
+            " Enable heavy omni completion.
+            if !exists('g:neocomplcache_omni_patterns')
+                let g:neocomplcache_omni_patterns = {}
+            endif
+            let g:neocomplcache_omni_patterns.php = '[^. \t]->\h\w*\|\h\w*::'
+            let g:neocomplcache_omni_patterns.perl = '\h\w*->\h\w*\|\h\w*::'
+            let g:neocomplcache_omni_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
+            let g:neocomplcache_omni_patterns.cpp = '[^.[:digit:] *\t]\%(\.\|->\)\|\h\w*::'
+            let g:neocomplcache_omni_patterns.ruby = '[^. *\t]\.\h\w*\|\h\w*::'
+            let g:neocomplcache_omni_patterns.go = '\h\w*\.\?'
+    " @}
+
+    " Snippets for neocomplcache and neocomplete @{
+        if count(g:pkk_bundle_groups, 'neocomplcache') ||
+                    \ count(g:pkk_bundle_groups, 'neocomplete')
+
+            " Use honza's snippets.
+            let g:neosnippet#snippets_directory='~/.vim/bundle/vim-snippets/snippets'
+
+            " Enable neosnippet snipmate compatibility mode
+            let g:neosnippet#enable_snipmate_compatibility = 1
+
+            " For snippet_complete marker.
+            if !exists("g:pkk_no_conceal")
+                if has('conceal')
+                    set conceallevel=2 concealcursor=i
+                endif
+            endif
+
+            " Enable neosnippets when using go
+            let g:go_snippet_engine = "neosnippet"
+
+            " Disable the neosnippet preview candidate window
+            " When enabled, there can be too much visual noise
+            " especially when splits are used.
+            set completeopt-=preview
+        endif
+    " @}
+
+    " Normal Vim omni-completion @{
+            elseif !exists('g:pkk_no_omni_complete')
+                " Enable omni-completion.
+                autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+                autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+                autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+                autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+                autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+                autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+                autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+
+            endif
+    " @}
+
+    " UndoTree @{
+        if isdirectory(expand("~/.vim/bundle/undotree/"))
+            nnoremap <Leader>u :UndotreeToggle<CR>
+            " If undotree is opened, it is likely one wants to interact with it.
+            let g:undotree_SetFocusWhenToggle=1
+        endif
+    " @}
+
+    " indent_guides @{
+        if isdirectory(expand("~/.vim/bundle/vim-indent-guides/"))
+            let g:indent_guides_enable_on_vim_startup = 1
+            let g:indent_guides_start_level = 2
+            let g:indent_guides_guide_size = 1
+            let g:indent_guides_autocmds_enabled = 0
+            let g:indent_guides_indent_levels = 15
+            let g:indent_guides_tab_guides = 0
+            let g:custom_exclude = [ 'help', 'denite', 'codi'  ]
+
+            if has('gui_running')
+                let g:indent_guides_auto_colors = 1
+                let g:indent_guides_color_change_percent = 3
+            else
+                let g:indent_guides_auto_colors = 0
+                if &background == 'light'
+                    autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=236
+                    autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=237
+                else
+                    autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=254
+                    autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=253
+                endif
+            endif
+        endif
+    " @}
+
+    " Wildfire @{
+    let g:wildfire_objects = {
+                \ "*" : ["i'", 'i"', "i)", "i]", "i}", "ip"],
+                \ "html,xml" : ["at"],
+                \ }
+    " @}
+
+    " quick-scope @{
+        " Trigger a highlight in the appropriate direction when pressing these keys:
+        let g:qs_highlight_on_keys = ['f', 'F', 't', 'T']
+
+        " Trigger a highlight only when pressing f and F.
+        let g:qs_highlight_on_keys = ['f', 'F']
+
+        let g:qs_first_occurrence_highlight_color = 155       " terminal vim
+
+        let g:qs_second_occurrence_highlight_color = 81         " terminal vim
+    " @}
+
+    " asterisk improved @{
+        map *  <Plug>(asterisk-z*)
+        map #  <Plug>(asterisk-z#)
+        map g* <Plug>(asterisk-gz*)
+        map g# <Plug>(asterisk-gz#)
+
+        " let g:asterisk#keeppos = 1
+    " @}
+
+    " simplyFold @{
+        let g:SimpylFold_docstring_preview=1
+        let g:SimpylFold_fold_docstring=0
+        let b:SimpylFold_fold_docstring=0
+        let g:SimpylFold_fold_import=1
+        let b:SimpylFold_fold_import=1
+    " @}
+" @}
+
+" General @{
+
+    set pastetoggle=<F2>           " pastetoggle (sane indentation on pastes)
+    set ttyfast  " fast scrolling
+    set lazyredraw  " for performance
+    set matchtime=3  " Time to show matching paranthesis
+    set title " Set title to window
+
+    if LINUX()
+        set term=screen-256color "give us 256 color schemes!
+    endif
+    if !has('gui')
+        set term=$TERM          " Make arrow and other keys work
+        set term=screen-256color "give us 256 color schemes!
+    endif
+
+    " enable matchit plugin which extends usage of % operator to match
+    " more words ex. if/end def/end html tags etc.
+    runtime macros/matchit.vim
+
+    filetype plugin indent on   " Automatically detect file types.
+    syntax on                   " Syntax highlighting
+    set mouse=a                 " Automatically enable mouse usage
+    set mousehide               " Hide the mouse cursor while typing
+    " Let Vim use utf-8 internally, because many scripts require this
+    set encoding=utf-8
+    scriptencoding utf-8
+
+    if has('clipboard')
+        if has('unnamedplus')  " When possible use + register for copy-paste
+            set clipboard=unnamed,unnamedplus
+        else         " On mac and Windows, use * register for copy-paste
+            set clipboard=unnamed
+        endif
+    endif
+
+    " Most prefer to automatically switch to the current file directory when
+    " a new buffer is opened
+    if !exists('g:pkk_no_autochdir')
+        autocmd BufEnter * if bufname("") !~ "^\[A-Za-z0-9\]*://" | lcd %:p:h | endif
+        " Always switch to the current file directory
+    endif
+
+    "set autowrite                       " Automatically write a file when leaving a modified buffer
+    set shortmess+=filmnrxoOtT          " Abbrev. of messages (avoids 'hit enter')
+    set viewoptions=folds,options,cursor,unix,slash " Better Unix / Windows compatibility
+    set virtualedit=onemore             " Allow for cursor beyond last character
+    set history=1000                    " Store a ton of history (default is 20)
+    set spell                           " Spell checking on
+    set hidden                          " Allow buffer switching without saving
+    set iskeyword-=.                    " '.' is an end of word designator
+    set iskeyword-=#                    " '#' is an end of word designator
+    set iskeyword-=-                    " '-' is an end of word designator
+
+    " Instead of reverting the cursor to the last position in the buffer, we
+    " set it to the first line when editing a git commit message
+    au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
+
+    " Restore cursor to file position in previous editing session
+    " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
+    if !exists('g:pkk_no_restore_cursor')
+        function! ResCur()
+            if line("'\"") <= line("$")
+                silent! normal! g`"
+                return 1
+            endif
+        endfunction
+
+        augroup resCur
+            autocmd!
+            autocmd BufWinEnter * call ResCur()
+        augroup END
+    endif
+
+    " Setting up the directories @{
+        set backup                  " Backups are nice ...
+        if has('persistent_undo')
+            set undofile                " So is persistent undo ...
+            set undolevels=1000         " Maximum number of changes that can be undone
+            set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
+        endif
+
+        if !exists('g:pkk_no_views')
+            " Add exclusions to mkview and loadview
+            " eg: *.*, svn-commit.tmp
+            let g:skipview_files = [
+                \ '\[example pattern\]'
+                \ ]
+        endif
+    " @}
+
+    if executable("ag")
+      set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column
+      set grepformat=%f:%l:%c:%m,%f:%l:%m
+    endif
+
+" @}
+
+" Vim UI @{
+
+    " Nicer vertical split line
+    set fillchars+=vert:│
+
+    " Redraw screen every time when focus gained
+    " au FocusGained * :redraw!
+
+    " vimdiff options
+    " Always use vertical diffs
+    set diffopt+=vertical
+    if &diff
+        colorscheme molokai
+    else
+        colorscheme PkkPaperColor
+        set background=light
+        set cursorline
+        hi CursorLine   gui=NONE cterm=NONE ctermbg=7 ctermfg=NONE  " 237 for dark background
+        "hi CursorLine gui=underline cterm=underline
+        "hi CursorLine   cterm=NONE ctermbg=8 guibg=#555555 ctermfg=NONE   " Highlight current line
+    endif
+
+    if v:version > 703
+        set relativenumber " relative line numbers
+    endif
+
+    set tabpagemax=15               " Only show 15 tabs
+    set showtabline=2
+    set showmode                    " Display the current mode
+
+    if has('cmdline_info')
+        set ruler                   " Show the ruler
+        set rulerformat=%30(%=\:b%n%y%m%r%w\ %l,%c%V\ %P%) " A ruler on steroids
+        set showcmd                 " Show partial commands in status line and
+                                    " Selected characters/lines in visual mode
+    endif
+
+    if has('statusline')
+        set laststatus=1
+
+        " Broken down into easily includeable segments
+        set statusline=%<%f\                     " Filename
+        set statusline+=%w%h%m%r                 " Options
+        set statusline+=%{fugitive#statusline()} " Git Hotness
+        set statusline+=\ [%{&ff}/%Y]            " Filetype
+        set statusline+=\ [%{getcwd()}]          " Current dir
+        set statusline+=%=%-14.(%l,%c%V%)\ %p%%  " Right aligned file nav info
+    endif
+
+    if WINDOWS()
+        set linespace=2                 " Extra spaces between rows
+    else
+        set linespace=0                 " No extra spaces between rows
+    endif
+
+    set backspace=indent,eol,start  " Backspace for dummies
+    set number                      " Line numbers on
+    set showmatch                   " Show matching brackets/parenthesis
+    set incsearch                   " Find as you type search
+    set hlsearch                    " Highlight search terms
+    set winminheight=0              " Windows can be 0 line high
+    set ignorecase                  " Case insensitive search
+    set smartcase                   " Case sensitive when uc present
+    set whichwrap=b,s,h,l,<,>,[,]   " Backspace and cursor keys wrap too
+    set scrolljump=0                " Lines to scroll when cursor leaves screen(0 means disabling)
+    set scrolloff=3                 " Minimum lines to keep above and below cursor
+    set sidescrolloff=5     " Keep at least 5 lines left/right
+    set foldenable                  " Auto fold code
+    set list                        " Show whitespaces as characters
+    set listchars=tab:│\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
+
+    set noshowmode
+    set visualbell
+
+    set wildmenu                    " Show list instead of just completing
+    set wildmode=list:longest,full  " Command <Tab> completion, list matches, then longest common part, then all.
+    set wildignore+=.hg,.git,.svn " Version Controls"
+    set wildignore+=*.aux,*.out,*.toc "Latex Indermediate files"
+    set wildignore+=*.jpg,*.bmp,*.gif,*.png,*.jpeg "Binary Imgs"
+    set wildignore+=*.o,*.obj,*.exe,*.dll,*.manifest "Compiled Object files"
+    set wildignore+=*.spl "Compiled speolling world list"
+    set wildignore+=*.sw? "Vim swap files"
+    set wildignore+=*.DS_Store "OSX SHIT"
+    set wildignore+=*.luac "Lua byte code"
+    set wildignore+=migrations "Django migrations"
+    set wildignore+=*.pyc "Python Object codes"
+    set wildignore+=*.orig,*.rej "Merge resolution files"
+
+    " Resize Split When the window is resized"
+    au VimResized * :wincmd =
+
+" @}
+
+" GUI Settings @{
+
+    " GVIM- (here instead of .gvimrc)
+    if has('gui_running')
+        if !exists("g:pkk_no_big_font")
+            if LINUX() && has("gui_running")
+                set guifont=Source\ Code\ Pro\ for\ Powerline\ Regular\ 10,Andale\ Mono\ Regular\ 10,Menlo\ Regular\ 11,Consolas\ Regular\ 12,Courier\ New\ Regular\ 14
+            elseif OSX() && has("gui_running")
+                set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,Consolas\ Regular:h12,Courier\ New\ Regular:h14
+            elseif WINDOWS() && has("gui_running")
+                set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,Andale_Mono:h10,Menlo:h10,Consolas:h10.2,Courier_New:h10
+            endif
+        endif
+        
+        set guioptions-=T           " Remove the toolbar
+        set guioptions-=m           " Remove the menubar
+        "set lines=40                " 40 lines of text instead of 24
+        au GUIEnter * simalt ~x     " Maxize the vim window 
+    else
+        if &term == 'xterm' || &term == 'screen'
+            set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
+        endif
+        "set term=builtin_ansi       " Make arrow and other keys work
+    endif   
+    
+" @}
+
+" Formatting @{
+
+    set nowrap                      " Do not wrap long lines
+    set linebreak
+    set autoindent                  " Indent at the same level of the previous line
+    set shiftwidth=4                " Use indents of 4 spaces
+    set smarttab
+    set expandtab                   " Tabs are spaces, not tabs
+    set tabstop=4                   " An indentation every four columns
+    set softtabstop=4               " Let backspace delete indent
+    set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
+    set splitright                  " Puts new vsplit windows to the right of the current
+    set splitbelow                  " Puts new split windows to the bottom of the current
+    "set matchpairs+=<:>             " Match, to be used with %
+    "set comments=sl:/*,mb:*,elx:*/  " auto format comment blocks
+
+    "highlight ColorColumn ctermbg=red      " set a visible line at 80 char
+    "call matchadd('ColorColumn', '\%81v', 100)
+    set textwidth=79 colorcolumn=+1
+
+    " au command for each filetypes
+    "autocmd FileType go autocmd BufWritePre <buffer> Fmt
+    autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
+    autocmd FileType haskell,puppet,ruby,yml,html,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
+
+    autocmd BufNewFile,BufRead *.coffee set filetype=coffee
+
+    " Workaround vim-commentary for Haskell
+    autocmd FileType haskell setlocal commentstring=--\ %s
+
+    " Workaround broken colour highlighting in Haskell
+    autocmd FileType haskell,rust setlocal nospell
+
+    " Automatically go to the end of pasted text
+    vnoremap <silent> y y`]
+    nnoremap <silent> p p`]
+
+    " replaces selected text with test from buffer
+    vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>`]
+
+    " automatically detect messages.log files and highlight them
+    au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
+    au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
+    au BufNewfile,BufRead syslog* set filetype=messages
+
+    " Remove trailing whitespaces and ^M chars while saving file
+    autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
+
+" @}
+
+" Functions @{
+
+    " Maximize split window @{
+        function! OpenCurrentAsNewTab()
+            let l:currentPos = getcurpos()
+            tabedit %
+            call setpos(".", l:currentPos)
+        endfunction
+        nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
+    " @}
+
+    " MaximizeToggle split window @{
+        "let g:id_provider = 0
+        "let g:windows_state = {}
+        "function! ToggleMaximize()
+            "if !exists('w:window_info') || g:windows_state[w:window_info[0]]
+                "let w:window_info = [g:id_provider, 1]    " [id, isparent]
+                "let g:windows_state[w:window_info[0]] = 0
+
+                "let l:currentPos = getcurpos()
+                "tabedit %
+                "call setpos(".", l:currentPos)
+
+                "let w:window_info = [g:id_provider, 0]    " [id, isparent]
+                "let g:id_provider = g:id_provider + 1
+            "elseif exists('w:window_info') && !w:window_info[1]
+                "tabclose
+                "let g:windows_state[w:window_info[0]] = 1
+            "endif
+        "endfunction
+        "nmap <leader>+ :call ToggleMaximize()<CR>
+    " @}
+
+    " Create Cscope database @{
+        function! CreateCscopeDatabase()
+            if (&filetype =='python')
+                Dispatch! find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqk
+            else
+                Dispatch! find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqk
+            endif
+        endfunction
+        nnoremap <leader>cdb :call CreateCscopeDatabase()<CR>
+
+        function! ConnectCscopeDatabase()
+            cs reset
+            call Cycle_csdb()
+        endfunction
+        nnoremap <leader>cdc :call ConnectCscopeDatabase()<CR>
+    " @}
+
+    " Toggle background @{
+        function! ToggleBG()
+            let s:tbg = &background
+            " Inversion
+            if s:tbg == "dark"
+                set background=light
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=254
+                    hi IndentGuidesEven ctermbg=253
+                endif
+            else
+                set background=dark
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=236
+                    hi IndentGuidesEven ctermbg=237
+                endif
+            endif
+        endfunction
+    " @}
+
+    " Initialize directories @{
+        function! InitializeDirectories()
+            let parent = $HOME
+            let prefix = '.vim'
+            let dir_list = {
+                        \ 'backup': 'backupdir',
+                        \ 'views': 'viewdir',
+                        \ 'swap': 'directory' }
+
+            if has('persistent_undo')
+                let dir_list['undo'] = 'undodir'
+            endif
+
+            " To specify a different directory in which to place the vimbackup,
+            " vimviews, vimundo, and vimswap files/directories, add the following
+            "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
+            if exists('g:pkk_consolidated_directory')
+                let common_dir = g:pkk_consolidated_directory . prefix
+            else
+                let common_dir = parent . prefix
+            endif
+
+            if !isdirectory(g:pkk_consolidated_directory)
+                call mkdir(g:pkk_consolidated_directory)
+            endif
+
+            for [dirname, settingname] in items(dir_list)
+                let directory = common_dir . dirname . '/'
+                if exists("*mkdir")
+                    if !isdirectory(directory)
+                        call mkdir(directory)
+                    endif
+                endif
+                if !isdirectory(directory)
+                    echo "Warning: Unable to create backup directory: " . directory
+                    echo "Try: mkdir -p " . directory
+                else
+                    let directory = substitute(directory, " ", "\\\\ ", "g")
+                    exec "set " . settingname . "=" . directory
+                endif
+            endfor
+        endfunction
+        call InitializeDirectories()
+    " @}
+
+    " Initialize NERDTree as needed @{
+        function! NERDTreeInitAsNeeded()
+            redir => bufoutput
+            buffers!
+            redir END
+            let idx = stridx(bufoutput, "NERD_tree")
+            if idx > -1
+                NERDTreeMirror
+                NERDTreeFind
+                wincmd l
+            endif
+        endfunction
+    " @}
+
+    " Strip whitespace @{
+        function! StripTrailingWhitespace()
+            " Preparation: save last search, and cursor position.
+            let _s=@/
+            let l = line(".")
+            let c = col(".")
+            " do the business:
+            %s/\s\+$//e
+            " clean up: restore previous search history, and cursor position
+            let @/=_s
+            call cursor(l, c)
+        endfunction
+    " @}
+
+    " Shell command @{
+        function! s:RunShellCommand(cmdline)
+            botright new
+
+            setlocal buftype=nofile
+            setlocal bufhidden=delete
+            setlocal nobuflisted
+            setlocal noswapfile
+            setlocal nowrap
+            setlocal filetype=shell
+            setlocal syntax=shell
+
+            call setline(1, a:cmdline)
+            call setline(2, substitute(a:cmdline, '.', '=', 'g'))
+            execute 'silent $read !' . escape(a:cmdline, '%#')
+            setlocal nomodifiable
+            1
+        endfunction
+
+        command! -complete=file -nargs=+ Shell call s:RunShellCommand(<q-args>)
+        " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
+    " @}
+
+    " Helper functions @{
+        function! VisualSelection(direction, extra_filter) range
+            let l:saved_reg = @"
+            execute "normal! vgvy"
+
+            let l:pattern = escape(@", '\\/.*$^~[]')
+            let l:pattern = substitute(l:pattern, "\n$", "", "")
+
+            if a:direction == 'gv'
+                call CmdLine("Ag \"" . l:pattern . "\" " )
+            elseif a:direction == 'replace'
+                call CmdLine("%s" . '/'. l:pattern . '/')
+            endif
+
+            let @/ = l:pattern
+            let @" = l:saved_reg
+        endfunction
+    " @}
+    
+    " Find and open companion file for c and cpp @{
+        function! FindCompanionFile()
+            let l:current_file=expand("%:t")
+            if l:current_file[-4:] == ".cpp"
+                cs find f <C-R>=expand("%:t:r") . ".hpp"
+            elseif l:current_file[-4:] == ".hpp"
+                cs find f <C-R>=expand("%:t:r") . ".cpp"
+            elseif l:current_file[-2:] == ".c"
+                cs find f <C-R>=expand("%:t:r") . ".h"
+            elseif l:current_file[-2:] == ".h"
+                cs find f <C-R>=expand("%:t:r") . ".c"
+            else
+                echo "No companion file for the file " l:current_file
+            endif
+        endfunction
+    " @}
+    
+    " toggle normal line numbers and relative line numbers @{
+        function! NumberToggle()
+          if(&relativenumber == 1)
+            set norelativenumber
+          else
+            set relativenumber
+          endif
+        endfunc
+    " @}
+
+    " set environment for c and cpp  @{
+        function! SetupCandCPPenviron()
+            "
+            " Search path for 'gf' command (e.g. open #include-d files)
+            "
+            set path+=/usr/include/c++/**
+
+            "
+            " Especially for C and C++, use section 3 of the manpages
+            "
+            noremap <buffer> <silent> K :exe "Man" 3 expand('<cword>') <CR>
+        endfunction
+    " @}
+
+" @}
+
+" Programming @{
+
+    let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
+
+    " setup environment for C and CPP
+    au BufNewFile,BufRead *.c,*.cc,*.cpp,*.h call SetupCandCPPenviron()
+
+    " Python @{
+        let python_highlight_all=1
+    " @}
+
+" @}
+
+" Key (re)Mappings @{
+
+    " TAB and Shift-TAB in normal mode cycle buffers
+    nmap <Tab> :bn<CR>
+    nmap <S-Tab> :bp<CR>
+
+    nnoremap <S-C> cc<ESC>k  " Clear the line
+
+    " toggle background
+    noremap <leader>bg :call ToggleBG()<CR>
+
+    " VIM-signature plugin
+    nnoremap <leader>sm :SignatureToggleSigns<cr>
+
+    " assign q; to avoid shift pressing when searching last ex commands
+    nmap q; q:
+    vmap q; q:
+
+    " Toggle relative line numbers
+    if v:version > 703
+        nnoremap <leader>tn :call NumberToggle()<cr>
+    endif
+
+    " REFRESH COMMANDS
+    " warning: to refresh NERDTree just type 'r' being in NERD window
+    nmap <F5> :e<cr>
+    imap <F5> <ESC>l:e<cr>i
+
+    " ack and silversearcher-ag
+    nmap  <leader>ag :exe "Ack " expand('<cword>') <CR>
+
+    " remap movement for wrapped lines being the same as for non-wrapped lines
+    nnoremap k gk
+    nnoremap gk k
+    nnoremap j gj
+    nnoremap gj j
+
+    " Sorrounding a word with ", ', (, [, {, `  @{
+        " ," Surround a word with "quotes"
+        map <leader>" ysiw"
+        vmap <leader>" c"<C-R>""<ESC>
+
+        " <leader>' Surround a word with 'single quotes'
+        map <leader>' ysiw'
+        vmap <leader>' c'<C-R>"'<ESC>
+        " <leader>) or ,( Surround a word with (parens)
+        " The difference is in whether a space is put in
+        map <leader>( ysiw(
+        map <leader>) ysiw)
+        vmap <leader>( c( <C-R>" )<ESC>
+        vmap <leader>) c(<C-R>")<ESC>
+
+        " <leader>[ Surround a word with [brackets]
+        map <leader>] ysiw]
+        map <leader>[ ysiw[
+        vmap <leader>[ c[ <C-R>" ]<ESC>
+        vmap <leader>] c[<C-R>"]<ESC>
+
+        " <leader>{ Surround a word with {braces}
+        map <leader>} ysiw}
+        map <leader>{ ysiw{
+        vmap <leader>} c{ <C-R>" }<ESC>
+        vmap <leader>{ c{<C-R>"}<ESC>
+
+        map <leader>` ysiw`
+    " @}
+
+    " Change inside various enclosures with Alt-" and Alt-'
+    " The f makes it find the enclosure so you don't have
+    " to be standing inside it
+    nnoremap <leader><leader>' f'ci'
+    nnoremap <leader><leader>" f"ci"
+    nnoremap <leader><leader>( f(ci(
+    nnoremap <leader><leader>) f)ci)
+    nnoremap <leader><leader>[ f[ci[
+    nnoremap <leader><leader>] f]ci]
+    nnoremap <leader><leader>{ f}ci}
+    nnoremap <leader><leader>} f}ci}
+
+    "" Tab navigation mappings
+    "" Go to tab by number
+    noremap <leader>1 1gt
+    noremap <leader>2 2gt
+    noremap <leader>3 3gt
+    noremap <leader>4 4gt
+    noremap <leader>5 5gt
+    noremap <leader>6 6gt
+    noremap <leader>7 7gt
+    noremap <leader>8 8gt
+    noremap <leader>9 9gt
+
+    "settings for searching and moving
+    nnoremap / /\v
+    vnoremap / /\v
+
+    " Map : to ; also in command mode.
+    nnoremap ; :
+    vmap ; :
+
+    " The default mappings for editing and applying the pkk configuration
+    " are <leader>ev and <leader>sv respectively.
+    noremap <leader>ev :tabedit ~/_vimrc<CR>
+    noremap <leader>sv :source ~/_vimrc<CR>
+
+    " Easier moving in tabs and windows
+    " The lines conflict with the default digraph mapping of <C-K>
+    nnoremap <C-J> <C-W><C-J>
+    nnoremap <C-K> <C-W><C-K>
+    nnoremap <C-L> <C-W><C-L>
+    nnoremap <C-H> <C-W><C-H>
+
+    " Wrapped lines goes down/up to next row, rather than next line in file.
+    noremap j gj
+    noremap k gk
+
+    " End/Start of line motion keys act relative to row/wrap width in the
+    " presence of `:set wrap`, and relative to line for `:set nowrap`.
+    " Default vim behaviour is to act relative to text line in both cases
+    if !exists('g:pkk_no_wrapRelMotion')
+        " Same for 0, home, end, etc
+        function! WrapRelativeMotion(key, ...)
+            let vis_sel=""
+            if a:0
+                let vis_sel="gv"
+            endif
+            if &wrap
+                execute "normal!" vis_sel . "g" . a:key
+            else
+                execute "normal!" vis_sel . a:key
+            endif
+        endfunction
+
+        " Make 0 go to the first character rather than the beginning
+        " of the line. When we're programming, we're almost always
+        " interested in working with text rather than empty space.
+
+        " Map g* keys in Normal, Operator-pending, and Visual+select
+        noremap $ :call WrapRelativeMotion("$")<CR>
+        noremap <End> :call WrapRelativeMotion("$")<CR>
+        noremap ^ :call WrapRelativeMotion("0")<CR>
+        noremap <Home> :call WrapRelativeMotion("0")<CR>
+        noremap 0 :call WrapRelativeMotion("^")<CR>
+        " Overwrite the operator pending $/<End> mappings from above
+        " to force inclusive motion with :execute normal!
+        onoremap $ v:call WrapRelativeMotion("$")<CR>
+        onoremap <End> v:call WrapRelativeMotion("$")<CR>
+        " Overwrite the Visual+select mode mappings from above
+        " to ensure the correct vis_sel flag is passed to function
+        vnoremap $ :<C-U>call WrapRelativeMotion("$", 1)<CR>
+        vnoremap <End> :<C-U>call WrapRelativeMotion("$", 1)<CR>
+        vnoremap ^ :<C-U>call WrapRelativeMotion("0", 1)<CR>
+        vnoremap <Home> :<C-U>call WrapRelativeMotion("0", 1)<CR>
+        vnoremap 0 :<C-U>call WrapRelativeMotion("^", 1)<CR>
+    endif
+
+    map <S-H> gT
+    map <S-L> gt
+    "map <leader>t :tabnew<CR>
+
+    " Yank from the cursor to the end of the line, to be consistent with C and D.
+    nnoremap Y y$
+
+    " Code folding options
+    nmap <leader>f0 :set foldlevel=0<CR>
+    nmap <leader>f1 :set foldlevel=1<CR>
+    nmap <leader>f2 :set foldlevel=2<CR>
+    nmap <leader>f3 :set foldlevel=3<CR>
+    nmap <leader>f4 :set foldlevel=4<CR>
+    nmap <leader>f5 :set foldlevel=5<CR>
+    nmap <leader>f6 :set foldlevel=6<CR>
+    nmap <leader>f7 :set foldlevel=7<CR>
+    nmap <leader>f8 :set foldlevel=8<CR>
+    nmap <leader>f9 :set foldlevel=9<CR>
+
+    " Most prefer to toggle search highlighting rather than clear the current
+    " search results.
+    if exists('g:pkk_clear_search_highlight')
+        nmap <silent> <leader>/ :nohlsearch<CR>
+    else
+        nmap <silent> <leader>/ :set invhlsearch<CR>
+    endif
+
+    " Find merge conflict markers
+    map <leader>fc /\v^[<\|=>]{7}( .*\|$)<CR>
+
+    " Shortcuts
+    " Change Working Directory to that of the current file
+    cmap cd. lcd %:p:h
+
+    " Visual shifting (does not exit Visual mode)
+    vnoremap < <gv
+    vnoremap > >gv
+
+    " Allow using the repeat operator with a visual selection (!)
+    " http://stackoverflow.com/a/8064607/127816
+    vnoremap . :normal .<CR>
+
+    " For when you forget to sudo.. Really Write the file.
+    cmap w!! w !sudo tee % >/dev/null
+
+    " Some helpers to edit mode
+    " http://vimcasts.org/e/14
+    cnoremap %% <C-R>=fnameescape(expand('%:h')).'/'<cr>
+    map <leader>ew :e %%
+    map <leader>es :sp %%
+    "map <leader>ev :vsp %%
+    map <leader>et :tabe %%
+
+    " Adjust viewports to the same size
+    map <Leader>= <C-w>=
+
+    " Map <Leader>ff to display all lines with keyword under cursor
+    " and ask which one to jump to
+    nmap <Leader>ff [I:let nr = input("Which one: ")<Bar>exe "normal " . nr ."[\t"<CR>
+
+    " Easier horizontal scrolling
+    map zl zL
+    map zh zH
+
+    " Easier formatting
+    nnoremap <silent> <leader>q gwip
+
+    " FIXME: Revert this f70be548
+    " fullscreen mode for GVIM and Terminal, need 'wmctrl' in you PATH
+    map <silent> <F11> :call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")<CR>
+
+    "Enable folding with the 's'
+    nnoremap s za
+
+    " Strip trailing whitespace and ^M character
+    nnoremap <leader>ws :call StripTrailingWhitespace()<CR>
+
+    " insert newline without entering into insert mode
+    nnoremap <leader><CR> o<Esc>
+
+    " Pressing <leader>sp will toggle and untoggle spell checking
+    map <leader>sp :setlocal spell!<cr>
+
+    " Disable arrow movement, resize splits instead.
+    nnoremap <Up>    :resize +2<CR>
+    nnoremap <Down>  :resize -2<CR>
+    nnoremap <Left>  :vertical resize +2<CR>
+    nnoremap <Right> :vertical resize -2<CR>
+
+" @}
+
+" Code Navigation and Formatting @{
+
+    " Open compainion file, if it exists (e.g. test.h -> test.cpp), using Ctrl-C and Ctrl-H
+    nnoremap <M-C> :call FindCompanionFile()<CR>
+
+    " Type _style in normal mode to restyle source code
+    nnoremap _style :%!astyle<CR>
+
+    " Convert a 1-line CPP function definition signature to a declaration signature
+    " Use by putting the cursor anywhere on the same line as the function signature
+    nnoremap _sig >>Wd2f:A;<ESC>0w
+
+    " Put cursor over a character to align the rest of the paragraph to, then type _align
+    nnoremap _align ywmvV}:s/<C-r>"/`<C-r>"/g<CR>V'v:!column -ts \`<CR>
+
+    " Open previous tag in new tab
+    nnoremap _t :tabnew %<CR>:tabprev<CR><C-t>
+
+    " Move to beginning of next word, skipping non-word characters
+    function! NextWord() range
+        for i in range(1,v:count1)
+            call search('\W*\<\w', 'eW')
+        endfor
+    endfunction
+    noremap <silent> W :call NextWord()<CR>
+
+" @}
+
+" Misc @{
+
+    " design lines for c, cpp
+    iabbr /** /************************************************************************
+    iabbr **/ ************************************************************************/
+    iabbr //- //-----------------------------------------------------------------------
+    " design lines for python
+    iabbr #-- #------------------------------------------------------------------------
+    iabbr #** #************************************************************************
+
+
+    " Manpage for word under cursor via 'K' in command moderuntime
+    runtime ftplugin/man.vim
+    noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
+
+    " Make Sure that Vim returns to the same line when we reopen a file"
+    augroup line_return
+        au!
+        au BufReadPost *
+                    \ if line("'\"") > 0 && line("'\"") <= line("$") |
+                    \ execute 'normal! g`"zvzz' |
+                    \ endif
+    augroup END
+
+    "autocmd VimLeave * SessionSaveAs vim_auto_saved_session
+    "autocmd BufWritePost ~/_vimrc source ~/_vimrc     "Sourc vimrce file when modified
+
+    set nospell                           " Spell checking off
+
+    " Dictionary path, from which the words are being looked up.
+    set dictionary=/usr/share/dict/words
+
+    " Set up detection for Txtfmt files
+    au! filetypedetect BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
+
+    " Visual mode pressing * or # searches for the current selection
+    " Super useful! From an idea by Michael Naumann
+    vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
+    vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
+
+    " search but say in the current search occurance
+    nmap * *N
+    nmap # #n
+
+    "Set fold method according to indent
+    set foldmethod=indent
+    set foldlevel=99
+
+    set backupskip=/tmp/*,/private/tmp/*" " Make Vim able to edit corntab fiels again.
+
+    autocmd VimEnter * helptags ~/.vim/doc
+
+    "" SURRENDINGS
+    "autocmd FileType c,cpp let b:surround_105  = "if (condition) {\n \r } \n"
+    "autocmd FileType c,cpp let b:surround_102  = "for (int i=0; i<condition;i++) {\n\r}\n"
+    "autocmd FileType c,cpp let b:surround_119  = "while (condition) {\n\r}\n"
+    "autocmd FileType c,cpp let b:surround_112  = "printf(\"\r\\n\");"
+    "autocmd FileType c,cpp let b:surround_99   = "/*\n\r*/"
+    "autocmd FileType html  let b:surround_102  = "<font face=\"courier\">/r</font>"
+
+    ""Enable snippets for cpputest
+    "autocmd FileType cpp :set filetype=cpp.cpputest
+    "autocmd FileType c   :set filetype=c.cpputest
+
+    "disable neocomplete for python
+    "autocmd FileType python NeoCompleteLock
+    "autocmd FileType shell NeoCompleteLock
+
+    " Force Saving Files that Require Root Permission
+    command! Sudowrite w !sudo tee % > /dev/null
+
+" @}
+
