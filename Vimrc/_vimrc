@@ -1202,7 +1202,7 @@
                 let g:indent_guides_color_change_percent = 3
             else
                 let g:indent_guides_auto_colors = 0
-                if &background == 'light'
+                if &background == 'dark'
                     autocmd VimEnter,Colorscheme * :hi IndentGuidesOdd  ctermbg=236
                     autocmd VimEnter,Colorscheme * :hi IndentGuidesEven ctermbg=237
                 else

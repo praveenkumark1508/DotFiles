@@ -53,11 +53,9 @@ def is_modified(timestamps_file, folderpath):
         try:
             if not is_ignored(filename):
                 if current_timestamps[filename] != old_timestamps[filename]:
-                    import ipdb; ipdb.set_trace()
                     state = True
                     break
         except KeyError:
-            import ipdb; ipdb.set_trace()
             state = True
             break
 
@@ -125,8 +123,8 @@ if __name__ == '__main__':
     os.chdir("..")
 
     # Committing and pushing in git
-    #  logging.info("Committing and pushing in git")
-    #  call("git add *", shell=True)
-    #  call('git commit -m {}'.format(COMMIT_MSG), shell=True)
-    #  call('git push')
-    #  print("Git push done")
+    logging.info("Committing and pushing in git")
+    call("git add *", shell=True)
+    call('git commit -m {}'.format(COMMIT_MSG), shell=True)
+    call('git push')
+    print("Git push done")
