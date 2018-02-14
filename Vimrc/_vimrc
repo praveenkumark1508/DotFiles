@@ -235,8 +235,9 @@
             Bundle 'godlygeek/tabular'
             Bundle 'luochen1990/rainbow'
             Plugin 'hari-rangarajan/CCTree'
-            "Plugin 'bash-support.vim'               " support for writing bash scripts
-            "Plugin 'c.vim'                          " C - language support
+            Plugin 'maralla/validator.vim'  " Linting on the fly
+            "Plugin 'bash-support.vim'      " support for writing bash scripts
+            "Plugin 'c.vim'                 " C - language support
 
             if executable('ctags')
                 Bundle 'majutsushi/tagbar'
@@ -390,6 +391,236 @@
             Plugin 'christoomey/vim-tmux-navigator'
         endif
     " @}
+" @}
+
+" Functions @{
+
+    " Maximize split window @{
+        function! OpenCurrentAsNewTab()
+            let l:currentPos = getcurpos()
+            tabedit %
+            call setpos(".", l:currentPos)
+        endfunction
+        nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
+    " @}
+
+    " MaximizeToggle split window @{
+        "let g:id_provider = 0
+        "let g:windows_state = {}
+        "function! ToggleMaximize()
+            "if !exists('w:window_info') || g:windows_state[w:window_info[0]]
+                "let w:window_info = [g:id_provider, 1]    " [id, isparent]
+                "let g:windows_state[w:window_info[0]] = 0
+
+                "let l:currentPos = getcurpos()
+                "tabedit %
+                "call setpos(".", l:currentPos)
+
+                "let w:window_info = [g:id_provider, 0]    " [id, isparent]
+                "let g:id_provider = g:id_provider + 1
+            "elseif exists('w:window_info') && !w:window_info[1]
+                "tabclose
+                "let g:windows_state[w:window_info[0]] = 1
+            "endif
+        "endfunction
+        "nmap <leader>+ :call ToggleMaximize()<CR>
+    " @}
+
+    " Create Cscope database @{
+        function! CreateCscopeDatabase()
+            if (&filetype =='python')
+                Dispatch! find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqk
+            else
+                Dispatch! find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqk
+            endif
+        endfunction
+        nnoremap <leader>cdb :call CreateCscopeDatabase()<CR>
+
+        function! ConnectCscopeDatabase()
+            cs reset
+            call Cycle_csdb()
+        endfunction
+        nnoremap <leader>cdc :call ConnectCscopeDatabase()<CR>
+    " @}
+
+    " Toggle background @{
+        function! ToggleBG()
+            let s:tbg = &background
+            " Inversion
+            if s:tbg == "dark"
+                set background=light
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=254
+                    hi IndentGuidesEven ctermbg=253
+                endif
+            else
+                set background=dark
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=236
+                    hi IndentGuidesEven ctermbg=237
+                endif
+            endif
+        endfunction
+    " @}
+
+    " Initialize directories @{
+        function! InitializeDirectories()
+            let parent = $HOME
+            let prefix = '.vim'
+            let dir_list = {
+                        \ 'backup': 'backupdir',
+                        \ 'views': 'viewdir',
+                        \ 'swap': 'directory' }
+
+            if has('persistent_undo')
+                let dir_list['undo'] = 'undodir'
+            endif
+
+            " To specify a different directory in which to place the vimbackup,
+            " vimviews, vimundo, and vimswap files/directories, add the following
+            "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
+            if exists('g:pkk_consolidated_directory')
+                let common_dir = g:pkk_consolidated_directory . prefix
+            else
+                let common_dir = parent . prefix
+            endif
+
+            if !isdirectory(g:pkk_consolidated_directory)
+                call mkdir(g:pkk_consolidated_directory)
+            endif
+
+            for [dirname, settingname] in items(dir_list)
+                let directory = common_dir . dirname . '/'
+                if exists("*mkdir")
+                    if !isdirectory(directory)
+                        call mkdir(directory)
+                    endif
+                endif
+                if !isdirectory(directory)
+                    echo "Warning: Unable to create backup directory: " . directory
+                    echo "Try: mkdir -p " . directory
+                else
+                    let directory = substitute(directory, " ", "\\\\ ", "g")
+                    exec "set " . settingname . "=" . directory
+                endif
+            endfor
+        endfunction
+        call InitializeDirectories()
+    " @}
+
+    " Initialize NERDTree as needed @{
+        function! NERDTreeInitAsNeeded()
+            redir => bufoutput
+            buffers!
+            redir END
+            let idx = stridx(bufoutput, "NERD_tree")
+            if idx > -1
+                NERDTreeMirror
+                NERDTreeFind
+                wincmd l
+            endif
+        endfunction
+    " @}
+
+    " Strip whitespace @{
+        function! StripTrailingWhitespace()
+            " Preparation: save last search, and cursor position.
+            let _s=@/
+            let l = line(".")
+            let c = col(".")
+            " do the business:
+            %s/\s\+$//e
+            " clean up: restore previous search history, and cursor position
+            let @/=_s
+            call cursor(l, c)
+        endfunction
+    " @}
+
+    " Shell command @{
+        function! s:RunShellCommand(cmdline)
+            botright new
+
+            setlocal buftype=nofile
+            setlocal bufhidden=delete
+            setlocal nobuflisted
+            setlocal noswapfile
+            setlocal nowrap
+            setlocal filetype=shell
+            setlocal syntax=shell
+
+            call setline(1, a:cmdline)
+            call setline(2, substitute(a:cmdline, '.', '=', 'g'))
+            execute 'silent $read !' . escape(a:cmdline, '%#')
+            setlocal nomodifiable
+            1
+        endfunction
+
+        command! -complete=file -nargs=+ Shell call s:RunShellCommand(<q-args>)
+        " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
+    " @}
+
+    " Helper functions @{
+        function! VisualSelection(direction, extra_filter) range
+            let l:saved_reg = @"
+            execute "normal! vgvy"
+
+            let l:pattern = escape(@", '\\/.*$^~[]')
+            let l:pattern = substitute(l:pattern, "\n$", "", "")
+
+            if a:direction == 'gv'
+                call CmdLine("Ag \"" . l:pattern . "\" " )
+            elseif a:direction == 'replace'
+                call CmdLine("%s" . '/'. l:pattern . '/')
+            endif
+
+            let @/ = l:pattern
+            let @" = l:saved_reg
+        endfunction
+    " @}
+    
+    " Find and open companion file for c and cpp @{
+        function! FindCompanionFile()
+            let l:current_file=expand("%:t")
+            if l:current_file[-4:] == ".cpp"
+                cs find f <C-R>=expand("%:t:r") . ".hpp"
+            elseif l:current_file[-4:] == ".hpp"
+                cs find f <C-R>=expand("%:t:r") . ".cpp"
+            elseif l:current_file[-2:] == ".c"
+                cs find f <C-R>=expand("%:t:r") . ".h"
+            elseif l:current_file[-2:] == ".h"
+                cs find f <C-R>=expand("%:t:r") . ".c"
+            else
+                echo "No companion file for the file " l:current_file
+            endif
+        endfunction
+    " @}
+    
+    " toggle normal line numbers and relative line numbers @{
+        function! NumberToggle()
+          if(&relativenumber == 1)
+            set norelativenumber
+          else
+            set relativenumber
+          endif
+        endfunc
+    " @}
+
+    " set environment for c and cpp  @{
+        function! SetupCandCPPenviron()
+            "
+            " Search path for 'gf' command (e.g. open #include-d files)
+            "
+            set path+=/usr/include/c++/**
+
+            "
+            " Especially for C and C++, use section 3 of the manpages
+            "
+            noremap <buffer> <silent> K :exe "Man" 3 expand('<cword>') <CR>
+        endfunction
+    " @}
+
 " @}
 
 " Plugins settings @{
@@ -673,12 +904,23 @@
         if isdirectory(expand("~/.vim/bundle/tagbar/"))
             if !&diff
                 autocmd FileType * nested :call tagbar#autoopen(0)
-                autocmd BufEnter * nested :call tagbar#autoopen(0)
+                " autocmd BufEnter * nested :call tagbar#autoopen(0)
             endif
             nnoremap <silent> <leader>tt :TagbarToggle<CR>
             let g:tagbar_width = 30
         endif
     "@}
+
+    " Validator @{
+        let g:validator_python_checkers = ['flake8']
+        let g:validator_cpp_checkers = ['clang-tidy']
+        let g:validator_c_checkers = ['clang-tidy']
+
+        let g:validator_error_msg_format = "[ ● %d/%d issues ]"
+        let g:validator_auto_open_quickfix = 0
+        let g:validator_filetype_map = {"python.django": "python"}
+        let g:validator_permament_sign = 1
+    " @}
 
     " Syntastic  @{
         set statusline+=%#warningmsg#
@@ -686,6 +928,7 @@
         set statusline+=%*
 
         let g:syntastic_c_include_dirs = [ "../include", "include", "../inc", "/usr/src/linux-headers-4.10.0-32/include/", "/usr/src/linux-headers-4.10.0-32-generic/include/" ]
+        let g:syntastic_cpp_include_dirs = [ "../include", "include", "../inc", "/usr/src/linux-headers-4.10.0-32/include/", "/usr/src/linux-headers-4.10.0-32-generic/include/" ]
         let g:syntastic_always_populate_loc_list = 1
         let g:syntastic_auto_loc_list = 1
         let g:syntastic_check_on_open = 0
@@ -1518,236 +1761,6 @@
 
 " @}
 
-" Functions @{
-
-    " Maximize split window @{
-        function! OpenCurrentAsNewTab()
-            let l:currentPos = getcurpos()
-            tabedit %
-            call setpos(".", l:currentPos)
-        endfunction
-        nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
-    " @}
-
-    " MaximizeToggle split window @{
-        "let g:id_provider = 0
-        "let g:windows_state = {}
-        "function! ToggleMaximize()
-            "if !exists('w:window_info') || g:windows_state[w:window_info[0]]
-                "let w:window_info = [g:id_provider, 1]    " [id, isparent]
-                "let g:windows_state[w:window_info[0]] = 0
-
-                "let l:currentPos = getcurpos()
-                "tabedit %
-                "call setpos(".", l:currentPos)
-
-                "let w:window_info = [g:id_provider, 0]    " [id, isparent]
-                "let g:id_provider = g:id_provider + 1
-            "elseif exists('w:window_info') && !w:window_info[1]
-                "tabclose
-                "let g:windows_state[w:window_info[0]] = 1
-            "endif
-        "endfunction
-        "nmap <leader>+ :call ToggleMaximize()<CR>
-    " @}
-
-    " Create Cscope database @{
-        function! CreateCscopeDatabase()
-            if (&filetype =='python')
-                Dispatch! find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqk
-            else
-                Dispatch! find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqk
-            endif
-        endfunction
-        nnoremap <leader>cdb :call CreateCscopeDatabase()<CR>
-
-        function! ConnectCscopeDatabase()
-            cs reset
-            call Cycle_csdb()
-        endfunction
-        nnoremap <leader>cdc :call ConnectCscopeDatabase()<CR>
-    " @}
-
-    " Toggle background @{
-        function! ToggleBG()
-            let s:tbg = &background
-            " Inversion
-            if s:tbg == "dark"
-                set background=light
-                hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
-                if !has('gui_running')
-                    hi IndentGuidesOdd  ctermbg=254
-                    hi IndentGuidesEven ctermbg=253
-                endif
-            else
-                set background=dark
-                hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
-                if !has('gui_running')
-                    hi IndentGuidesOdd  ctermbg=236
-                    hi IndentGuidesEven ctermbg=237
-                endif
-            endif
-        endfunction
-    " @}
-
-    " Initialize directories @{
-        function! InitializeDirectories()
-            let parent = $HOME
-            let prefix = '.vim'
-            let dir_list = {
-                        \ 'backup': 'backupdir',
-                        \ 'views': 'viewdir',
-                        \ 'swap': 'directory' }
-
-            if has('persistent_undo')
-                let dir_list['undo'] = 'undodir'
-            endif
-
-            " To specify a different directory in which to place the vimbackup,
-            " vimviews, vimundo, and vimswap files/directories, add the following
-            "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
-            if exists('g:pkk_consolidated_directory')
-                let common_dir = g:pkk_consolidated_directory . prefix
-            else
-                let common_dir = parent . prefix
-            endif
-
-            if !isdirectory(g:pkk_consolidated_directory)
-                call mkdir(g:pkk_consolidated_directory)
-            endif
-
-            for [dirname, settingname] in items(dir_list)
-                let directory = common_dir . dirname . '/'
-                if exists("*mkdir")
-                    if !isdirectory(directory)
-                        call mkdir(directory)
-                    endif
-                endif
-                if !isdirectory(directory)
-                    echo "Warning: Unable to create backup directory: " . directory
-                    echo "Try: mkdir -p " . directory
-                else
-                    let directory = substitute(directory, " ", "\\\\ ", "g")
-                    exec "set " . settingname . "=" . directory
-                endif
-            endfor
-        endfunction
-        call InitializeDirectories()
-    " @}
-
-    " Initialize NERDTree as needed @{
-        function! NERDTreeInitAsNeeded()
-            redir => bufoutput
-            buffers!
-            redir END
-            let idx = stridx(bufoutput, "NERD_tree")
-            if idx > -1
-                NERDTreeMirror
-                NERDTreeFind
-                wincmd l
-            endif
-        endfunction
-    " @}
-
-    " Strip whitespace @{
-        function! StripTrailingWhitespace()
-            " Preparation: save last search, and cursor position.
-            let _s=@/
-            let l = line(".")
-            let c = col(".")
-            " do the business:
-            %s/\s\+$//e
-            " clean up: restore previous search history, and cursor position
-            let @/=_s
-            call cursor(l, c)
-        endfunction
-    " @}
-
-    " Shell command @{
-        function! s:RunShellCommand(cmdline)
-            botright new
-
-            setlocal buftype=nofile
-            setlocal bufhidden=delete
-            setlocal nobuflisted
-            setlocal noswapfile
-            setlocal nowrap
-            setlocal filetype=shell
-            setlocal syntax=shell
-
-            call setline(1, a:cmdline)
-            call setline(2, substitute(a:cmdline, '.', '=', 'g'))
-            execute 'silent $read !' . escape(a:cmdline, '%#')
-            setlocal nomodifiable
-            1
-        endfunction
-
-        command! -complete=file -nargs=+ Shell call s:RunShellCommand(<q-args>)
-        " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
-    " @}
-
-    " Helper functions @{
-        function! VisualSelection(direction, extra_filter) range
-            let l:saved_reg = @"
-            execute "normal! vgvy"
-
-            let l:pattern = escape(@", '\\/.*$^~[]')
-            let l:pattern = substitute(l:pattern, "\n$", "", "")
-
-            if a:direction == 'gv'
-                call CmdLine("Ag \"" . l:pattern . "\" " )
-            elseif a:direction == 'replace'
-                call CmdLine("%s" . '/'. l:pattern . '/')
-            endif
-
-            let @/ = l:pattern
-            let @" = l:saved_reg
-        endfunction
-    " @}
-    
-    " Find and open companion file for c and cpp @{
-        function! FindCompanionFile()
-            let l:current_file=expand("%:t")
-            if l:current_file[-4:] == ".cpp"
-                cs find f <C-R>=expand("%:t:r") . ".hpp"
-            elseif l:current_file[-4:] == ".hpp"
-                cs find f <C-R>=expand("%:t:r") . ".cpp"
-            elseif l:current_file[-2:] == ".c"
-                cs find f <C-R>=expand("%:t:r") . ".h"
-            elseif l:current_file[-2:] == ".h"
-                cs find f <C-R>=expand("%:t:r") . ".c"
-            else
-                echo "No companion file for the file " l:current_file
-            endif
-        endfunction
-    " @}
-    
-    " toggle normal line numbers and relative line numbers @{
-        function! NumberToggle()
-          if(&relativenumber == 1)
-            set norelativenumber
-          else
-            set relativenumber
-          endif
-        endfunc
-    " @}
-
-    " set environment for c and cpp  @{
-        function! SetupCandCPPenviron()
-            "
-            " Search path for 'gf' command (e.g. open #include-d files)
-            "
-            set path+=/usr/include/c++/**
-
-            "
-            " Especially for C and C++, use section 3 of the manpages
-            "
-            noremap <buffer> <silent> K :exe "Man" 3 expand('<cword>') <CR>
-        endfunction
-    " @}
-
-" @}
-
 " Programming @{
 
     let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
@@ -2086,22 +2099,6 @@
     set backupskip=/tmp/*,/private/tmp/*" " Make Vim able to edit corntab fiels again.
 
     autocmd VimEnter * helptags ~/.vim/doc
-
-    "" SURRENDINGS
-    "autocmd FileType c,cpp let b:surround_105  = "if (condition) {\n \r } \n"
-    "autocmd FileType c,cpp let b:surround_102  = "for (int i=0; i<condition;i++) {\n\r}\n"
-    "autocmd FileType c,cpp let b:surround_119  = "while (condition) {\n\r}\n"
-    "autocmd FileType c,cpp let b:surround_112  = "printf(\"\r\\n\");"
-    "autocmd FileType c,cpp let b:surround_99   = "/*\n\r*/"
-    "autocmd FileType html  let b:surround_102  = "<font face=\"courier\">/r</font>"
-
-    ""Enable snippets for cpputest
-    "autocmd FileType cpp :set filetype=cpp.cpputest
-    "autocmd FileType c   :set filetype=c.cpputest
-
-    "disable neocomplete for python
-    "autocmd FileType python NeoCompleteLock
-    "autocmd FileType shell NeoCompleteLock
 
     " Force Saving Files that Require Root Permission
     command! Sudowrite w !sudo tee % > /dev/null
