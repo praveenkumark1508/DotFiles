@@ -125,6 +125,6 @@ if __name__ == '__main__':
     # Committing and pushing in git
     logging.info("Committing and pushing in git")
     call("git add *", shell=True)
-    call('git commit -m {}'.format(COMMIT_MSG), shell=True)
+    call('git commit -m "{}"'.format(COMMIT_MSG), shell=True)
     call('git push')
     print("Git push done")
