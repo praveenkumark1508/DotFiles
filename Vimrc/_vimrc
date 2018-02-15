@@ -435,7 +435,7 @@
 
     " Find Project Root Directory @{
         function! FindProjectRoot()
-            let l:root_indicators = ["cscope.out", "generatedFiles", "_build", "test", "examples", "certs", ".project"]
+            let l:root_indicators = ["cscope.out", ".project", "generatedFiles", "_build", "test", "examples", "certs", ".git", ".svn", "build.xml", ".root"]
             for indicator in l:root_indicators
                 let l:root_dir = Find_in_parent(indicator,GetFileDir(),$HOME)
                 if l:root_dir != "Nothing"
@@ -733,6 +733,19 @@
         nmap <C-@><C-@>f :vert scs find f <C-R>=expand("<cfile>")<CR><CR>
         nmap <C-@><C-@>i :vert scs find i <C-R>=expand("<cfile>")<CR><CR>
         nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
+    " @}
+
+    " AsyncRun @{
+        let g:asyncrun_rootmarks = ['cscope.out', '.project', '.root', 'build.xml', "generatedFiles", "_build"]
+        nnoremap <leader>ag :AsyncRun! -cwd=b:projectroot_dir grep -n -R --include=*.c --include=*.cpp --include=*.h <cword> .
+        noremap <leader>cpl :AsyncRun <C-R>=b:projectroot_dir . "/build_A2"<cr><cr>
+        augroup vimrc
+            autocmd QuickFixCmdPost * botright copen 8
+        augroup END
+        augroup vimrc
+            autocmd User AsyncRunStart call asyncrun#quickfix_toggle(8, 1)
+        augroup END
+        noremap <leader>qf :call asyncrun#quickfix_toggle(8)<cr>
     " @}
 
     " PyMode @{
