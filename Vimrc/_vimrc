@@ -166,6 +166,7 @@
         if count(g:pkk_bundle_groups, 'general')
             Plugin 'tpope/vim-unimpaired'
             Plugin 'tpope/vim-dispatch'             " run tasks in background
+            Plugin 'skywind3000/asyncrun.vim'             " run tasks in background
             Plugin 'IndexedSearch'                  " Search results counter
             Plugin 'tmhedberg/SimpylFold'
             Bundle 'scrooloose/nerdtree'
@@ -227,6 +228,7 @@
             Plugin 'vim-scripts/autoload_cscope.vim'
             Plugin 'ctags.vim'                      " Use ctags
             Plugin 'vim-syntastic/syntastic'
+            Plugin 'maralla/validator.vim'  " Linting on the fly
             Bundle 'tpope/vim-fugitive'
             Bundle 'mattn/webapi-vim'
             Bundle 'mattn/gist-vim'
@@ -235,7 +237,8 @@
             Bundle 'godlygeek/tabular'
             Bundle 'luochen1990/rainbow'
             Plugin 'hari-rangarajan/CCTree'
-            Plugin 'maralla/validator.vim'  " Linting on the fly
+            Plugin 'idanarye/vim-vebugger' " Debugging in vim
+            Plugin 'Shougo/vimproc.vim' " Interactive command execution in vim
             "Plugin 'bash-support.vim'      " support for writing bash scripts
             "Plugin 'c.vim'                 " C - language support
 
@@ -281,16 +284,14 @@
     " Python @{
         if count(g:pkk_bundle_groups, 'python')
             " Pick either python-mode or pyflakes & pydoc
-            Plugin 'davidhalter/jedi-vim'
+            " Plugin 'davidhalter/jedi-vim'
+            Plugin 'klen/python-mode'
             Plugin 'vim-scripts/indentpython.vim' " Python indent handling
             Plugin 'joonty/vdebug'
-            " Provides some utility select, move and modify code.
-            Bundle 'yssource/python.vim'
-            " Jump to if else end, for break,
-            Bundle 'python_match.vim'
-            " Autocomplete. dynamic type deduction and etc.
-            Bundle 'pythoncomplete'
-            "Bundle 'klen/python-mode'
+            Plugin 'yssource/python.vim' " Provides some utility select, move and modify code.
+            Plugin 'python_match.vim' " Jump to if else end, for break,
+            Plugin 'pythoncomplete' " Autocomplete. dynamic type deduction and etc.
+
             "Plugin 'nvie/vim-flake8'            " PEP8 checking
         endif
     " @}
@@ -395,6 +396,57 @@
 
 " Functions @{
 
+    " Get the directory the file @{
+        "  Gets the directory for the file in the current window
+        "  Or the current working dir if there isn't one for the window.
+        "  Use tr to allow that other OS paths, too
+        function! GetFileDir()
+          if winbufnr(0) == -1
+            let unislash = getcwd()
+          else
+            let unislash = fnamemodify(bufname(winbufnr(0)), ':p:h')
+          endif
+            return tr(unislash, '\', '/')
+        endfunc
+    " @}
+
+    " Find a file in parent directory@{
+        " Starting with the current working dir, it walks up the parent folders
+        " until it finds the file, or it hits the stop dir.
+        " If it doesn't find it, it returns "Nothing"
+        function! Find_in_parent(f_name, start_dir, stop_dir)
+          let here = a:start_dir
+          while ( strlen( here) > 0 )
+            if filereadable( here . "/" . a:f_name ) || isdirectory(( here . "/" . a:f_name ))
+              return here
+            endif
+            let fr = match(here, "/[^/]*$")
+            if fr == -1
+              break
+            endif
+            let here = strpart(here, 0, fr)
+            if here == a:stop_dir
+              break
+            endif
+          endwhile
+          return "Nothing"
+        endfunc
+    " @}
+
+    " Find Project Root Directory @{
+        function! FindProjectRoot()
+            let l:root_indicators = ["cscope.out", "generatedFiles", "_build", "test", "examples", "certs", ".project"]
+            for indicator in l:root_indicators
+                let l:root_dir = Find_in_parent(indicator,GetFileDir(),$HOME)
+                if l:root_dir != "Nothing"
+                    return l:root_dir
+                endif
+            endfor
+            return GetFileDir()
+        endfunc
+        autocmd FileType c,cpp,h,hpp,python let b:projectroot_dir = FindProjectRoot()
+    " @}
+
     " Maximize split window @{
         function! OpenCurrentAsNewTab()
             let l:currentPos = getcurpos()
@@ -427,20 +479,28 @@
     " @}
 
     " Create Cscope database @{
-        function! CreateCscopeDatabase()
-            if (&filetype =='python')
-                Dispatch! find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqk
-            else
-                Dispatch! find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqk
-            endif
-        endfunction
-        nnoremap <leader>cdb :call CreateCscopeDatabase()<CR>
-
-        function! ConnectCscopeDatabase()
+        function! CscopeDone()
             cs reset
             call Cycle_csdb()
-        endfunction
-        nnoremap <leader>cdc :call ConnectCscopeDatabase()<CR>
+        endfunc
+
+        function! CscopeUpdate(workdir, cscopeout)
+            let l:cscopeout = fnamemodify(a:cscopeout, ":p")
+            let l:cscopeout = fnameescape(l:cscopeout)
+            let l:workdir = (a:workdir == '')? '.' : a:workdir
+            try | exec "cs kill ".l:cscopeout | catch | endtry
+            if (&filetype == 'python')
+                let l:command ="find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqkc"
+            else
+                let l:command = "find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqkc"
+            endif
+            exec "AsyncRun -post=call\\ CscopeDone() ".
+                        \ "-text=".l:cscopeout." "
+                        \ "-cwd=".fnameescape(l:workdir)." ".
+                        \ l:command
+        endfunc
+
+        noremap <leader>cdb :call CscopeUpdate(b:projectroot_dir, "cscope.out")<cr>
     " @}
 
     " Toggle background @{
@@ -579,24 +639,24 @@
             let @" = l:saved_reg
         endfunction
     " @}
-    
+
     " Find and open companion file for c and cpp @{
         function! FindCompanionFile()
             let l:current_file=expand("%:t")
             if l:current_file[-4:] == ".cpp"
-                cs find f <C-R>=expand("%:t:r") . ".hpp"
+                cs find f %:t:r.hpp
             elseif l:current_file[-4:] == ".hpp"
-                cs find f <C-R>=expand("%:t:r") . ".cpp"
+                cs find f %:t:r.cpp
             elseif l:current_file[-2:] == ".c"
-                cs find f <C-R>=expand("%:t:r") . ".h"
+                cs find f %:t:r.h
             elseif l:current_file[-2:] == ".h"
-                cs find f <C-R>=expand("%:t:r") . ".c"
+                cs find f %:t:r.c
             else
                 echo "No companion file for the file " l:current_file
             endif
         endfunction
     " @}
-    
+
     " toggle normal line numbers and relative line numbers @{
         function! NumberToggle()
           if(&relativenumber == 1)
@@ -684,7 +744,7 @@
         endif
 
         if isdirectory(expand("~/.vim/bundle/python-mode"))
-            let g:pymode_lint_checkers = ['pyflakes']
+            " let g:pymode_lint_checkers = ['pyflakes']
             let g:pymode_lint_on_write = 0
             let g:pymode_trim_whitespaces = 1
             let g:pymode_options = 1
@@ -1495,7 +1555,7 @@
 
 " General @{
 
-    set pastetoggle=<F2>           " pastetoggle (sane indentation on pastes)
+    " set pastetoggle=<F2>           " pastetoggle (sane indentation on pastes)
     set ttyfast  " fast scrolling
     set lazyredraw  " for performance
     set matchtime=3  " Time to show matching paranthesis
@@ -1697,18 +1757,18 @@
                 set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,Andale_Mono:h10,Menlo:h10,Consolas:h10.2,Courier_New:h10
             endif
         endif
-        
+
         set guioptions-=T           " Remove the toolbar
         set guioptions-=m           " Remove the menubar
         "set lines=40                " 40 lines of text instead of 24
-        au GUIEnter * simalt ~x     " Maxize the vim window 
+        au GUIEnter * simalt ~x     " Maxize the vim window
     else
         if &term == 'xterm' || &term == 'screen'
             set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
         endif
         "set term=builtin_ansi       " Make arrow and other keys work
-    endif   
-    
+    endif
+
 " @}
 
 " Formatting @{
@@ -1799,8 +1859,8 @@
 
     " REFRESH COMMANDS
     " warning: to refresh NERDTree just type 'r' being in NERD window
-    nmap <F5> :e<cr>
-    imap <F5> <ESC>l:e<cr>i
+    " nmap <F5> :e<cr>
+    " imap <F5> <ESC>l:e<cr>i
 
     " ack and silversearcher-ag
     nmap  <leader>ag :exe "Ack " expand('<cword>') <CR>
@@ -1996,9 +2056,8 @@
     " Easier formatting
     nnoremap <silent> <leader>q gwip
 
-    " FIXME: Revert this f70be548
     " fullscreen mode for GVIM and Terminal, need 'wmctrl' in you PATH
-    map <silent> <F11> :call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")<CR>
+    " map <silent> <F11> :call system("wmctrl -ir " . v:windowid . " -b toggle,fullscreen")<CR>
 
     "Enable folding with the 's'
     nnoremap s za
@@ -2023,7 +2082,7 @@
 " Code Navigation and Formatting @{
 
     " Open compainion file, if it exists (e.g. test.h -> test.cpp), using Ctrl-C and Ctrl-H
-    nnoremap <M-C> :call FindCompanionFile()<CR>
+    nnoremap <C-C> :call FindCompanionFile()<CR>
 
     " Type _style in normal mode to restyle source code
     nnoremap _style :%!astyle<CR>
