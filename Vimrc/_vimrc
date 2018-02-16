@@ -164,14 +164,16 @@
 
     " General @{
         if count(g:pkk_bundle_groups, 'general')
+            Plugin 'romainl/vim-qf'  " Tame quickfix window
             Plugin 'tpope/vim-unimpaired'
-            Plugin 'tpope/vim-dispatch'             " run tasks in background
+            Plugin 'ervandew/supertab'
+            " Plugin 'tpope/vim-dispatch'             " run tasks in background
             Plugin 'skywind3000/asyncrun.vim'             " run tasks in background
             Plugin 'IndexedSearch'                  " Search results counter
             Plugin 'tmhedberg/SimpylFold'
             Bundle 'scrooloose/nerdtree'
             Bundle 'kshenoy/vim-signature'
-            Bundle 'altercation/vim-colors-solarized'
+            " Bundle 'altercation/vim-colors-solarized'
             Bundle 'tpope/vim-surround'
             Bundle 'tpope/vim-repeat'
             Bundle 'rhysd/conflict-marker.vim'
@@ -208,7 +210,6 @@
             Plugin 'haya14busa/vim-asterisk'
             Plugin 'rhysd/accelerated-jk'
             Plugin 't9md/vim-quickhl'
-            Plugin 'neomake/neomake'
         endif
     " @}
 
@@ -227,7 +228,8 @@
             " Pick one of the checksyntax, jslint, or syntastic
             Plugin 'vim-scripts/autoload_cscope.vim'
             Plugin 'ctags.vim'                      " Use ctags
-            Plugin 'vim-syntastic/syntastic'
+            " Plugin 'vim-syntastic/syntastic'
+            Plugin 'neomake/neomake'
             Plugin 'maralla/validator.vim'  " Linting on the fly
             Bundle 'tpope/vim-fugitive'
             Bundle 'mattn/webapi-vim'
@@ -444,7 +446,7 @@
             endfor
             return GetFileDir()
         endfunc
-        autocmd FileType c,cpp,h,hpp,python let b:projectroot_dir = FindProjectRoot()
+        autocmd FileType * let b:projectroot_dir = FindProjectRoot()
     " @}
 
     " Maximize split window @{
@@ -685,6 +687,23 @@
 
 " Plugins settings @{
 
+    " Vim-qf @{
+        let g:qf_loclist_window_bottom=0
+        let g:qf_window_bottom = 1
+        let g:qf_mapping_ack_style = 1
+        let g:qf_auto_resize = 1
+        let g:qf_max_height = 10
+        let g:qf_auto_quit = 0
+        let g:qf_nowrap = 0
+
+        let g:qf_statusline = {}
+        let g:qf_statusline.before = '%<\ '
+        let g:qf_statusline.after = '\ %f%=%l\/%-6L\ \ \ \ \ '
+
+        nmap <leader>ll <Plug>qf_loc_stay_toggle
+        nmap <leader>qf <Plug>qf_qf_stay_toggle
+    " @}
+
     " Cscope @{
         set cscopetag       " Use both cscope and ctag tagfiles
 
@@ -735,17 +754,37 @@
         nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
     " @}
 
+    " Accelerated-jk @{
+        nmap j <Plug>(accelerated_jk_gj)
+        nmap k <Plug>(accelerated_jk_gk)
+    " @}
+
+    " Neomake @{
+        call neomake#configure#automake({
+                    \ 'BufWritePost': {'delay': 0},
+                    \ 'BufWinEnter': {},
+                    \ }, 500)
+        let g:neomake_open_list = 2
+
+        let g:neomake_c_enabled_makers = ['clangtidy']
+        let g:neomake_cpp_enabled_makers = ['clangtidy']
+        let g:neomake_python_enabled_makers = ['flake8']
+        let g:neomake_vim_enabled_makers = ['vint']
+
+        augroup my_neomake_signs
+            au!
+            autocmd ColorScheme *
+                \ hi NeomakeErrorSign ctermfg=darkred |
+                \ hi NeomakeWarningSign ctermfg=202
+        augroup END
+    " @}
+
     " AsyncRun @{
         let g:asyncrun_rootmarks = ['cscope.out', '.project', '.root', 'build.xml', "generatedFiles", "_build"]
-        nnoremap <leader>ag :AsyncRun! -cwd=b:projectroot_dir grep -n -R --include=*.c --include=*.cpp --include=*.h <cword> .
-        noremap <leader>cpl :AsyncRun <C-R>=b:projectroot_dir . "/build_A2"<cr><cr>
-        augroup vimrc
-            autocmd QuickFixCmdPost * botright copen 8
-        augroup END
+        nnoremap <leader>cpl :AsyncRun <C-R>=b:projectroot_dir . "/build_A2"<cr><cr>
         augroup vimrc
             autocmd User AsyncRunStart call asyncrun#quickfix_toggle(8, 1)
         augroup END
-        noremap <leader>qf :call asyncrun#quickfix_toggle(8)<cr>
     " @}
 
     " PyMode @{
@@ -989,9 +1028,10 @@
         let g:validator_cpp_checkers = ['clang-tidy']
         let g:validator_c_checkers = ['clang-tidy']
 
-        let g:validator_error_msg_format = "[ ● %d/%d issues ]"
-        let g:validator_auto_open_quickfix = 0
+        " let g:validator_error_msg_format = "[ ● %d/%d issues ]"
         let g:validator_filetype_map = {"python.django": "python"}
+        let g:validator_auto_open_quickfix = 0
+        let g:validator_no_loclist = 1
         let g:validator_permament_sign = 1
     " @}
 
@@ -1876,7 +1916,8 @@
     " imap <F5> <ESC>l:e<cr>i
 
     " ack and silversearcher-ag
-    nmap  <leader>ag :exe "Ack " expand('<cword>') <CR>
+    " nmap  <leader>ag :exe "Ack " expand('<cword>') <CR>
+    nnoremap <leader>ag  :AsyncRun grep -n -R --include=*.c --include=*.cpp --include=*.h --include=*.py --include=*.pyw <cword> <C-R>=b:projectroot_dir<CR><CR>
 
     " remap movement for wrapped lines being the same as for non-wrapped lines
     nnoremap k gk
@@ -2131,9 +2172,10 @@
     iabbr #** #************************************************************************
 
 
-    " Manpage for word under cursor via 'K' in command moderuntime
+    " Manpage for word under cursor via 'M' in command moderuntime
     runtime ftplugin/man.vim
-    noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
+    au FileType c,cpp,h,hpp,sh,shell noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
+    au FileType vim noremap <buffer> <silent> M :h <C-R>=expand('<cword>')<CR><CR>
 
     " Make Sure that Vim returns to the same line when we reopen a file"
     augroup line_return

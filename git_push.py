@@ -3,18 +3,18 @@
 Script to commit and push all the changes in the local repo
 '''
 
-import os
-import sys
-import pickle
-from subprocess import call
 import logging
+import os
+import pickle
 import re
+from subprocess import call
+import sys
 
 
 def get_timestamps(root_dir):
-    '''
-    Get the timestamp of all the files in the root_dir and return it in
-    a dictionary.
+    '''Get the timestamp of all the files in the root_dir and return it in
+
+    a dictionary
     '''
     timestamp_dict = {}
     for root, folder, files in os.walk(root_dir):
@@ -27,9 +27,7 @@ def get_timestamps(root_dir):
 
 
 def is_ignored(filename):
-    '''
-    Check if the filename is ignored or not
-    '''
+    '''Check if the filename is ignored or not'''
     for pattern in IGNORE_FILES:
         if re.match(pattern, filename):
             return True
@@ -38,9 +36,7 @@ def is_ignored(filename):
 
 
 def is_modified(timestamps_file, folderpath):
-    '''
-    find the modified files
-    '''
+    '''find the modified files'''
     try:
         current_timestamps = get_timestamps(folderpath)
         old_timestamps = load_timestamp(timestamps_file)
@@ -64,25 +60,19 @@ def is_modified(timestamps_file, folderpath):
 
 
 def save_timestamps(timestamp_dict, filename):
-    '''
-    Save the timestamp_dict to a file
-    '''
+    '''Save the timestamp_dict to a file'''
     with open(filename, 'wb') as pickle_file:
         pickle.dump(timestamp_dict, pickle_file)
 
 
 def load_timestamp(pickle_filename):
-    '''
-    Load the timestamp_dict from a file
-    '''
+    '''Load the timestamp_dict from a file'''
     with open(pickle_filename, 'rb') as pickle_file:
         return pickle.load(pickle_file)
 
 
 def create_zip(zipfile_name, folder):
-    '''
-    Function to create zipfile splitted to 40MB size
-    '''
+    '''Function to create zipfile splitted to 40MB size'''
     logging.info("Creating zipfile of %s", folder)
     call("zip -r {}.zip {} --out temp.zip".format(zipfile_name, folder),
          shell=True)
@@ -126,5 +116,5 @@ if __name__ == '__main__':
     logging.info("Committing and pushing in git")
     call("git add *", shell=True)
     call('git commit -m "{}"'.format(COMMIT_MSG), shell=True)
-    call('git push')
+    call('git push', shell=True)
     print("Git push done")
