@@ -771,11 +771,6 @@
         let g:neomake_python_enabled_makers = ['flake8']
         let g:neomake_python_flake8_maker = {
             \ 'exe': 'python3',
-            \ 'errorformat':
-            \ '%E%f:%l: could not compile,%-Z%p^,' .
-            \ '%A%f:%l:%c: %t%n %m,' .
-            \ '%A%f:%l: %t%n %m,' .
-            \ '%-G%.%#',
             \ }
         let g:neomake_vim_enabled_makers = ['vint']
 
