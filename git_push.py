@@ -36,7 +36,8 @@ def is_ignored(filename):
 
 
 def is_modified(timestamps_file, folderpath):
-    '''find the modified files'''
+    '''find the modified files
+    '''
     try:
         current_timestamps = get_timestamps(folderpath)
         old_timestamps = load_timestamp(timestamps_file)
