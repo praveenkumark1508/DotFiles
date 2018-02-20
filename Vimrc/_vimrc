@@ -32,7 +32,7 @@
 
           " Be nice and check for multi_byte even if the config requires
           " multi_byte support most of the time
-          if has("multi_byte")
+          if has('multi_byte')
             " Windows cmd.exe still uses cp850. If Windows ever moved to
             " Powershell as the primary terminal, this would be utf-8
             set termencoding=cp850
@@ -47,7 +47,7 @@
     " @}
 
     " Arrow Key Fix @{
-        if &term[:4] == "xterm" || &term[:5] == 'screen' || &term[:3] == 'rxvt'
+        if &term[:4] ==# 'xterm' || &term[:5] ==# 'screen' || &term[:3] ==# 'rxvt'
             inoremap <silent> <C-[>OC <RIGHT>
         endif
     " @}
@@ -55,13 +55,13 @@
     " Setup Bundle Support @{
         " The next three lines ensure that the ~/.vim/bundle/ system works
         filetype off
-        set rtp+=~/.vim/bundle/vundle
+        set runtimepath+=~/.vim/bundle/vundle
         call vundle#rc()
     " @}
 
     " Add an UnBundle command @{
     function! UnBundle(arg, ...)
-      let bundle = vundle#config#init_bundle(a:arg, a:000)
+      let l:bundle = vundle#config#init_bundle(a:arg, a:000)
       call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
     endfunction
 
@@ -70,12 +70,16 @@
     " @}
 
     " Leader and Local Leader @{
-        let mapleader = ' '
-        let maplocalleader = '_'
+        let g:mapleader = ' '
+        let g:maplocalleader = '_'
     " @}
 
     " Detecting Filetypes @{
-        augroup filetypedetect
+        augroup pkk_augroup
+            autocmd!
+            autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
+            autocmd BufNewFile,BufRead *.coffee set filetype=coffee
+
             au! BufNewFile,BufRead *.arxml setf xml
             au! BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
         augroup END
@@ -90,6 +94,9 @@
 
     " Disable views
        let g:pkk_no_views = 1
+
+    " Prefered Syntax checker
+    let g:pkk_syntax_checker = 'ale'
 
     " Disable wrap relative motion for start/end line motions
     "   let g:pkk_no_wrapRelMotion = 1
@@ -162,7 +169,7 @@
             Bundle 'mileszs/ack.vim'
             let g:ackprg = 'ag --nogroup --nocolor --column --smart-case'
         elseif executable('ack-grep')
-            let g:ackprg="ack-grep -H --nocolor --nogroup --column"
+            let g:ackprg='ack-grep -H --nocolor --nogroup --column'
             Bundle 'mileszs/ack.vim'
         elseif executable('ack')
             Bundle 'mileszs/ack.vim'
@@ -171,13 +178,14 @@
 
     " General @{
         if count(g:pkk_bundle_groups, 'general')
+            Plugin 'mtth/scratch.vim'
             Plugin 'romainl/vim-qf'  " Tame quickfix window
             Plugin 'tpope/vim-unimpaired'
             Plugin 'ervandew/supertab'
             " Plugin 'tpope/vim-dispatch'             " run tasks in background
             Plugin 'skywind3000/asyncrun.vim'             " run tasks in background
-            Plugin 'IndexedSearch'                  " Search results counter
-            Plugin 'tmhedberg/SimpylFold'
+            Plugin 'henrik/vim-indexed-search'            " Search results counter
+
             Bundle 'scrooloose/nerdtree'
             Bundle 'kshenoy/vim-signature'
             " Bundle 'altercation/vim-colors-solarized'
@@ -190,7 +198,7 @@
             Bundle 'terryma/vim-multiple-cursors'
             Bundle 'vim-scripts/sessionman.vim'
             Bundle 'matchit.zip'
-            if (has("python") || has("python3")) && exists('g:pkk_use_powerline')
+            if (has('python') || has('python3')) && exists('g:pkk_use_powerline')
                 Bundle 'Lokaltog/powerline', {'rtp':'/powerline/bindings/vim'}
             else
                 Bundle 'vim-airline/vim-airline'
@@ -235,9 +243,14 @@
             " Pick one of the checksyntax, jslint, or syntastic
             Plugin 'vim-scripts/autoload_cscope.vim'
             Plugin 'ctags.vim'                      " Use ctags
-            " Plugin 'vim-syntastic/syntastic'
-            Plugin 'neomake/neomake'
-            Plugin 'maralla/validator.vim'  " Linting on the fly
+            if g:pkk_syntax_checker ==# 'ale'
+                Plugin 'w0rp/ale'
+            elseif g:pkk_syntax_checker ==# 'syntastic'
+                Plugin 'vim-syntastic/syntastic'
+            elseif g:pkk_syntax_checker ==# 'neomake'
+                Plugin 'neomake/neomake'
+                Plugin 'maralla/validator.vim'  " Linting on the fly
+            endif
             Bundle 'tpope/vim-fugitive'
             Bundle 'mattn/webapi-vim'
             Bundle 'mattn/gist-vim'
@@ -265,7 +278,7 @@
             Bundle 'garbas/vim-snipmate'
             Bundle 'honza/vim-snippets'
             " Source support_function.vim to support vim-snippets.
-            if filereadable(expand("~/.vim/bundle/vim-snippets/snippets/support_functions.vim"))
+            if filereadable(expand('~/.vim/bundle/vim-snippets/snippets/support_functions.vim'))
                 source ~/.vim/bundle/vim-snippets/snippets/support_functions.vim
             endif
         elseif count(g:pkk_bundle_groups, 'ultisnips')
@@ -292,31 +305,29 @@
         if count(g:pkk_bundle_groups, 'c')
             Plugin 'hari-rangarajan/CCTree'
             Plugin 'Rip-Rip/clang_complete'
+            Plugin 'LucHermitte/VimFold4C'
             "Plugin 'c.vim'                 " C - language support
         endif
     " @}
 
     " Python @{
         if count(g:pkk_bundle_groups, 'python')
-            " Pick either python-mode or pyflakes & pydoc
             " Plugin 'davidhalter/jedi-vim'
             Plugin 'klen/python-mode'
-            Plugin 'vim-scripts/indentpython.vim' " Python indent handling
+
             Plugin 'joonty/vdebug'
+            Plugin 'vim-scripts/indentpython.vim' " Python indent handling
             Plugin 'yssource/python.vim' " Provides some utility select, move and modify code.
             Plugin 'python_match.vim' " Jump to if else end, for break,
             Plugin 'pythoncomplete' " Autocomplete. dynamic type deduction and etc.
-
-            "Plugin 'nvie/vim-flake8'            " PEP8 checking
         endif
     " @}
 
     " HTML @{
         if count(g:pkk_bundle_groups, 'html')
             Bundle 'hail2u/vim-css3-syntax'
-            Bundle 'gorodinskiy/vim-coloresque'
+            Plugin 'ap/vim-css-color'
             Plugin 'othree/xml.vim'
-            " Plugin 'vim-scripts/XML-Folding'
             Bundle 'tpope/vim-haml'
             Bundle 'mattn/emmet-vim'
         endif
@@ -419,11 +430,11 @@
         "  Use tr to allow that other OS paths, too
         function! GetFileDir()
           if winbufnr(0) == -1
-            let unislash = getcwd()
+            let l:unislash = getcwd()
           else
-            let unislash = fnamemodify(bufname(winbufnr(0)), ':p:h')
+            let l:unislash = fnamemodify(bufname(winbufnr(0)), ':p:h')
           endif
-            return tr(unislash, '\', '/')
+            return tr(l:unislash, '\', '/')
         endfunc
     " @}
 
@@ -432,43 +443,45 @@
         " until it finds the file, or it hits the stop dir.
         " If it doesn't find it, it returns "Nothing"
         function! Find_in_parent(f_name, start_dir, stop_dir)
-          let here = a:start_dir
-          while ( strlen( here) > 0 )
-            if filereadable( here . "/" . a:f_name ) || isdirectory(( here . "/" . a:f_name ))
-              return here
+          let l:here = a:start_dir
+          while ( strlen( l:here) > 0 )
+            if filereadable( l:here . '/' . a:f_name ) || isdirectory(( l:here . '/' . a:f_name ))
+              return l:here
             endif
-            let fr = match(here, "/[^/]*$")
-            if fr == -1
+            let l:fr = match(l:here, '/[^/]*$')
+            if l:fr == -1
               break
             endif
-            let here = strpart(here, 0, fr)
-            if here == a:stop_dir
+            let l:here = strpart(l:here, 0, l:fr)
+            if l:here == a:stop_dir
               break
             endif
           endwhile
-          return "Nothing"
+          return 'Nothing'
         endfunc
     " @}
 
     " Find Project Root Directory @{
         function! FindProjectRoot()
-            let l:root_indicators = ["cscope.out", ".project", "generatedFiles", "_build", "test", "examples", "certs", ".git", ".svn", "build.xml", ".root"]
-            for indicator in l:root_indicators
-                let l:root_dir = Find_in_parent(indicator,GetFileDir(),$HOME)
-                if l:root_dir != "Nothing"
+            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_build', 'test', 'examples', 'certs', '.git', '.svn', 'build.xml', '.root']
+            for l:indicator in l:root_indicators
+                let l:root_dir = Find_in_parent(l:indicator,GetFileDir(),$HOME)
+                if l:root_dir !=# 'Nothing'
                     return l:root_dir
                 endif
             endfor
             return GetFileDir()
         endfunc
-        autocmd FileType * let b:projectroot_dir = FindProjectRoot()
+        augroup pkk_augroup
+            autocmd FileType * let b:projectroot_dir = FindProjectRoot()
+        augroup END
     " @}
 
     " Maximize split window @{
         function! OpenCurrentAsNewTab()
             let l:currentPos = getcurpos()
             tabedit %
-            call setpos(".", l:currentPos)
+            call setpos('.', l:currentPos)
         endfunction
         nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
     " @}
@@ -502,18 +515,18 @@
         endfunc
 
         function! CscopeUpdate(workdir, cscopeout)
-            let l:cscopeout = fnamemodify(a:cscopeout, ":p")
+            let l:cscopeout = fnamemodify(a:cscopeout, ':p')
             let l:cscopeout = fnameescape(l:cscopeout)
-            let l:workdir = (a:workdir == '')? '.' : a:workdir
-            try | exec "cs kill ".l:cscopeout | catch | endtry
-            if (&filetype == 'python')
-                let l:command ="find . -iname '*.py' -o -iname '*.pyw' > cscope.files && cscope -bqkc"
+            let l:workdir = (a:workdir ==# '')? '.' : a:workdir
+            try | exec 'cs kill '.l:cscopeout | catch | endtry
+            if (&filetype ==# 'python')
+                let l:command = "find . -ipath '*/test' -prune -o -iname '*.py' -print -o -iname '*.pyw' -print > cscope.files && cscope -bqkc"
             else
-                let l:command = "find . -iname '*.[ch]' -o -iname '*.[ch]pp' > cscope.files && cscope -bqkc"
+                let l:command = "find . -ipath '*/generatedFiles' -prune -o -iname '*.[ch]' -print -o -iname '*.[ch]pp' -print > cscope.files && cscope -bqkc"
             endif
             exec "AsyncRun -post=call\\ CscopeDone() ".
-                        \ "-text=".l:cscopeout." "
-                        \ "-cwd=".fnameescape(l:workdir)." ".
+                        \ '-text='.l:cscopeout.' '
+                        \ '-cwd='.fnameescape(l:workdir).' '.
                         \ l:command
         endfunc
 
@@ -524,7 +537,7 @@
         function! ToggleBG()
             let s:tbg = &background
             " Inversion
-            if s:tbg == "dark"
+            if s:tbg ==# 'dark'
                 set background=light
                 hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
                 if !has('gui_running')
@@ -546,43 +559,43 @@
 
     " Initialize directories @{
         function! InitializeDirectories()
-            let parent = $HOME
-            let prefix = '.vim'
-            let dir_list = {
+            let l:parent = $HOME
+            let l:prefix = '.vim'
+            let l:dir_list = {
                         \ 'backup': 'backupdir',
                         \ 'views': 'viewdir',
                         \ 'swap': 'directory' }
 
             if has('persistent_undo')
-                let dir_list['undo'] = 'undodir'
+                let l:dir_list['undo'] = 'undodir'
             endif
 
             " To specify a different directory in which to place the vimbackup,
             " vimviews, vimundo, and vimswap files/directories, add the following
             "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
             if exists('g:pkk_consolidated_directory')
-                let common_dir = g:pkk_consolidated_directory . prefix
+                let l:common_dir = g:pkk_consolidated_directory . l:prefix
             else
-                let common_dir = parent . prefix
+                let l:common_dir = l:parent . l:prefix
             endif
 
             if !isdirectory(g:pkk_consolidated_directory)
                 call mkdir(g:pkk_consolidated_directory)
             endif
 
-            for [dirname, settingname] in items(dir_list)
-                let directory = common_dir . dirname . '/'
-                if exists("*mkdir")
-                    if !isdirectory(directory)
-                        call mkdir(directory)
+            for [l:dirname, l:settingname] in items(l:dir_list)
+                let l:directory = l:common_dir . l:dirname . '/'
+                if exists('*mkdir')
+                    if !isdirectory(l:directory)
+                        call mkdir(l:directory)
                     endif
                 endif
-                if !isdirectory(directory)
-                    echo "Warning: Unable to create backup directory: " . directory
-                    echo "Try: mkdir -p " . directory
+                if !isdirectory(l:directory)
+                    echo 'Warning: Unable to create backup directory: ' . l:directory
+                    echo 'Try: mkdir -p ' . l:directory
                 else
-                    let directory = substitute(directory, " ", "\\\\ ", "g")
-                    exec "set " . settingname . "=" . directory
+                    let l:directory = substitute(l:directory, ' ', "\\\\ ", 'g')
+                    exec 'set ' . l:settingname . '=' . l:directory
                 endif
             endfor
         endfunction
@@ -591,11 +604,11 @@
 
     " Initialize NERDTree as needed @{
         function! NERDTreeInitAsNeeded()
-            redir => bufoutput
+            redir => l:bufoutput
             buffers!
             redir END
-            let idx = stridx(bufoutput, "NERD_tree")
-            if idx > -1
+            let l:idx = stridx(l:bufoutput, 'NERD_tree')
+            if l:idx > -1
                 NERDTreeMirror
                 NERDTreeFind
                 wincmd l
@@ -606,14 +619,14 @@
     " Strip whitespace @{
         function! StripTrailingWhitespace()
             " Preparation: save last search, and cursor position.
-            let _s=@/
-            let l = line(".")
-            let c = col(".")
+            let l:_s=@/
+            let l:l = line('.')
+            let l:c = col('.')
             " do the business:
             %s/\s\+$//e
             " clean up: restore previous search history, and cursor position
-            let @/=_s
-            call cursor(l, c)
+            let @/=l:_s
+            call cursor(l:l, l:c)
         endfunction
     " @}
 
@@ -643,15 +656,15 @@
     " Helper functions @{
         function! VisualSelection(direction, extra_filter) range
             let l:saved_reg = @"
-            execute "normal! vgvy"
+            execute 'normal! vgvy'
 
             let l:pattern = escape(@", '\\/.*$^~[]')
-            let l:pattern = substitute(l:pattern, "\n$", "", "")
+            let l:pattern = substitute(l:pattern, "\n$", '', '')
 
-            if a:direction == 'gv'
+            if a:direction ==# 'gv'
                 call CmdLine("Ag \"" . l:pattern . "\" " )
-            elseif a:direction == 'replace'
-                call CmdLine("%s" . '/'. l:pattern . '/')
+            elseif a:direction ==# 'replace'
+                call CmdLine('%s' . '/'. l:pattern . '/')
             endif
 
             let @/ = l:pattern
@@ -661,17 +674,17 @@
 
     " Find and open companion file for c and cpp @{
         function! FindCompanionFile()
-            let l:current_file=expand("%:t")
-            if l:current_file[-4:] == ".cpp"
+            let l:current_file=expand('%:t')
+            if l:current_file[-4:] ==# '.cpp'
                 cs find f %:t:r.hpp
-            elseif l:current_file[-4:] == ".hpp"
+            elseif l:current_file[-4:] ==# '.hpp'
                 cs find f %:t:r.cpp
-            elseif l:current_file[-2:] == ".c"
+            elseif l:current_file[-2:] ==# '.c'
                 cs find f %:t:r.h
-            elseif l:current_file[-2:] == ".h"
+            elseif l:current_file[-2:] ==# '.h'
                 cs find f %:t:r.c
             else
-                echo "No companion file for the file " l:current_file
+                echo 'No companion file for the file ' l:current_file
             endif
         endfunction
     " @}
@@ -703,6 +716,61 @@
 " @}
 
 " Plugins settings @{
+
+    " ScratchBuffer @{
+        if WINDOWS()
+            let g:scratch_persistence_file = 'C:/Users/okr5kor/.vim/databases/scratch_buffer.txt'
+        else
+            let g:scratch_persistence_file = '/home/praveen/.vim/databases/scratch_buffer.txt'
+        endif
+        let g:scratch_autohide = 1
+        let g:scratch_insert_autohide = 1
+    " @}
+
+    " ALE @{
+        if g:pkk_syntax_checker ==# 'ale'
+            let g:ale_fixers = {
+                        \   'python': ['add_blank_lines_for_python_control_statements', 'autopep8', 'isort', 'yapf'],
+                        \   'c': ['clang-format', 'clang-tidy'],
+                        \   'cpp': ['clang-format', 'clang-tidy'],
+                        \   'vim': ['vint'],
+                        \}
+
+            let g:ale_linters = {
+                        \   'javascript': ['eslint'],
+                        \   'python': ['pylint', 'flake8'],
+                        \   'c': ['clang'],
+                        \   'cpp': ['clang'],
+                        \   'vim': ['vint'],
+                        \}
+
+            " Enable completion where available.
+            let g:ale_completion_enabled = 1
+
+            let g:ale_sign_column_always = 1
+
+            let g:airline#extensions#ale#enabled = 1
+
+            let g:ale_echo_msg_error_str = 'E'
+            let g:ale_echo_msg_warning_str = 'W'
+            let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+
+            let g:ale_lint_on_text_changed = 'always'
+            let g:ale_lint_on_enter = 1
+
+            let g:ale_open_list = 0
+            let g:ale_keep_list_window_open = 0
+        endif
+    " @}
+
+    " VimFold4C @{
+        let g:fold_options = {
+                    \ 'show_if_and_else': 1,
+                    \ 'strip_template_arguments': 1,
+                    \ 'strip_namespaces': 1,
+                    \ 'max_foldline_length': 'win'
+                    \ }
+    " @}
 
     " Ultisnips @{
         let g:UltiSnipsSnippetDirectories = ['~/.vim/UltiSnips', 'UltiSnips']
@@ -786,38 +854,42 @@
     " @}
 
     " Neomake @{
-        let g:neomake_cpp_enabled_makers = ['clang']
-        let g:neomake_cpp_clang_maker = {
-                    \ 'args': [ '-I', '/usr/src/linux-headers-4.10.0-32/include',
-                    \ '-I', '/usr/src/linux-headers-4.10.0-32/arch/x86/include',
-                    \ ],
-                    \ }
+        if g:pkk_syntax_checker ==# 'neomake'
+            let g:neomake_cpp_enabled_makers = ['clang']
+            let g:neomake_cpp_clang_maker = {
+                        \ 'args': [ '-I', '/usr/src/linux-headers-4.10.0-32/include',
+                        \ '-I', '/usr/src/linux-headers-4.10.0-32/arch/x86/include',
+                        \ ],
+                        \ }
 
-        let g:neomake_c_enabled_makers = ['clang']
-        let g:neomake_c_clang_maker = g:neomake_cpp_clang_maker
+            let g:neomake_c_enabled_makers = ['clang']
+            let g:neomake_c_clang_maker = g:neomake_cpp_clang_maker
 
-        let g:neomake_python_enabled_makers = ['pylint', 'flake8']
+            let g:neomake_python_enabled_makers = ['pylint', 'flake8']
 
-        let g:neomake_vim_enabled_makers = ['vint']
+            let g:neomake_vim_enabled_makers = ['vint']
 
-        let g:neomake_open_list = 2
+            let g:neomake_open_list = 2
 
-        call neomake#configure#automake({
-                    \ 'BufWritePost': {'delay': 0},
-                    \ 'BufWinEnter': {},
-                    \ }, 500)
+            call neomake#configure#automake({
+                        \ 'BufWritePost': {'delay': 0},
+                        \ 'BufWinEnter': {},
+                        \ }, 500)
 
-        augroup my_neomake_signs
-            au!
-            autocmd ColorScheme *
-                \ hi NeomakeErrorSign ctermfg=darkred |
-                \ hi NeomakeWarningSign ctermfg=202
-        augroup END
+            augroup my_neomake_signs
+                au!
+                autocmd ColorScheme *
+                    \ hi NeomakeErrorSign ctermfg=darkred |
+                    \ hi NeomakeWarningSign ctermfg=202
+            augroup END
+        endif
     " @}
 
     " VDebugger @{
-        au FileType python nnoremap <F5> :VBGstartPDB3 % <CR>
-        au FileType c,cpp nnoremap <F5> :VBGstartGDB a.out<CR>
+        augroup pkk_augroup
+            au FileType python nnoremap <F5> :VBGstartPDB3 % <CR>
+            au FileType c,cpp nnoremap <F5> :VBGstartGDB a.out<CR>
+        augroup END
 
         nnoremap <F2> :VBGstepIn<CR>
         nnoremap <F3> :VBGstepOver<CR>
@@ -830,9 +902,10 @@
     " @}
 
     " AsyncRun @{
-        let g:asyncrun_rootmarks = ['cscope.out', '.project', '.root', 'build.xml', "generatedFiles", "_build"]
+        let g:asyncrun_rootmarks = ['cscope.out', '.project', '.root', 'build.xml', 'generatedFiles', '_build']
         nnoremap <leader>cpl :AsyncRun <C-R>=b:projectroot_dir . "/build_A2"<cr><cr>
-        augroup vimrc
+        augroup asyncrun_settings_au
+            autocmd!
             autocmd User AsyncRunStart call asyncrun#quickfix_toggle(8, 1)
         augroup END
     " @}
@@ -845,23 +918,44 @@
             let g:pymode = 1
         endif
 
-        if isdirectory(expand("~/.vim/bundle/python-mode"))
-            " let g:pymode_lint_checkers = ['pyflakes']
-            let g:pymode_lint_on_write = 0
-            let g:pymode_trim_whitespaces = 1
-            let g:pymode_options = 1
+        if isdirectory(expand('~/.vim/bundle/python-mode'))
+            let g:pymode_lint = 0
+            let g:pymode_syntax_slow_sync = 0
+
+            let g:pymode_motion = 1
+            let g:pymode_doc = 1
+            let g:pymode_doc_bind = 'K'
+            let g:pymode_run = 1
+            let g:pymode_run_bind = '<leader>r'
             let g:pymode_rope = 1
+            let g:pymode_rope_show_doc_bind = '<C-c>d'
+            let g:pymode_rope_regenerate_on_write = 1
+            let g:pymode_rope_completion = 1
+            let g:pymode_rope_complete_on_dot = 1
+            let g:pymode_rope_completion_bind = '<C-Space>'
+            let g:pymode_rope_autoimport = 1
+            let g:pymode_rope_autoimport_bind = '<C-c>ra'
+            let g:pymode_rope_goto_definition_bind = '<C-]>'
+            let g:pymode_rope_goto_definition_cmd = 'new'
+            let g:pymode_rope_rename_bind = '<C-c>rr'
+            let g:pymode_rope_rename_module_bind = '<C-c>r1r'
+            let g:pymode_rope_organize_imports_bind = '<C-c>ro'
+            let g:pymode_rope_module_to_package_bind = '<C-c>r1p'
+            let g:pymode_rope_extract_method_bind = '<C-c>rm'
+            let g:pymode_rope_extract_variable_bind = '<C-c>rl'
+            let g:pymode_rope_use_function_bind = '<C-c>ru'
+            let g:pymode_rope_move_bind = '<C-c>rv'
+            let g:pymode_rope_change_signature_bind = '<C-c>rs'
+            let g:pymode_syntax = 1
+            let g:pymode_syntax_all = 1
+
+            let g:pymode_trim_whitespaces = 1
+            let g:pymode_options = 0
             let g:pymode_options_colorcolumn = 1 " Display a verticle line at 80 character
 
             "Set pymode to use python3 interpreter
             let g:pymode_python = 'python3'
-            let g:pymode_virtualenv_path = "/home/praveen/anaconda3/"
-
-            " Override go-to.definition key shortcut to Ctrl-]
-            let g:pymode_rope_goto_definition_bind = "<C-]>"
-            " Override view python doc key shortcut to Ctrl-Shift-d
-            let g:pymode_doc = 1
-            let g:pymode_doc_bind = "<C-S-d>"
+            " let g:pymode_virtualenv_path = '/home/praveen/anaconda3/'
 
             "Setup pymode |quickfix| window
             let g:pymode_quickfix_minheight = 3
@@ -869,9 +963,6 @@
 
             let g:pymode_indent = 1
             let g:pymode_folding = 1
-
-            "Enable vim motion
-            let g:pymode_motion = 1
 
             "Enable breakpoint
             let g:pymode_breakpoint = 1
@@ -889,13 +980,13 @@
     " @}
 
     " Ultisnips @{
-        let g:UltiSnipsExpandTrigger="<tab>"
-        let g:UltiSnipsJumpForwardTrigger="<tab>"
-        let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
+        let g:UltiSnipsExpandTrigger='<tab>'
+        let g:UltiSnipsJumpForwardTrigger='<tab>'
+        let g:UltiSnipsJumpBackwardTrigger='<s-tab>'
     " @}
 
     " ctrlp @{
-        if isdirectory(expand("~/.vim/bundle/ctrlp.vim/"))
+        if isdirectory(expand('~/.vim/bundle/ctrlp.vim/'))
             if executable('ag')
                 let s:ctrlp_fallback = 'ag %s --nocolor -l -g ""'
             elseif executable('ack-grep')
@@ -938,7 +1029,7 @@
                 "\ 'fallback': s:ctrlp_fallback
             "\ }
 
-            if isdirectory(expand("~/.vim/bundle/ctrlp-funky/"))
+            if isdirectory(expand('~/.vim/bundle/ctrlp-funky/'))
                 " CtrlP extensions
                 let g:ctrlp_extensions = ['funky']
 
@@ -974,11 +1065,13 @@
                 let g:airline_section_x = airline#section#create(['ffenc'])
                 let g:airline_section_y = airline#section#create(['filetype'])
             endfunction
-            autocmd VimEnter * call AirlineInit()
+            augroup pkk_augroup
+                autocmd VimEnter * call AirlineInit()
+            augroup END
 
             " See `:echo g:airline_theme_map` for some more choices
             " Default in terminal vim is 'dark'
-            if isdirectory(expand("~/.vim/bundle/vim-airline-themes/"))
+            if isdirectory(expand('~/.vim/bundle/vim-airline-themes/'))
                 if !exists('g:airline_powerline_fonts')
                     " Use the default set of separators with a few customizations
                     let g:airline_left_sep='›'  " Slightly fancier than '>'
@@ -995,11 +1088,11 @@
                     let s:N1 = ['#000000', '#afd700', '16', '148'] " Outside blocks in normal mode
                     let s:N2 = ['#808080', '#303030', '244', '236'] " Middle block
 
-                    for colors in values(a:palette.inactive)
-                    if &background == 'light'
-                        let colors[3] = 235
-                    elseif &background == 'dark'
-                        let colors[3] = 250
+                    for l:colors in values(a:palette.inactive)
+                    if &background ==# 'light'
+                        let l:colors[3] = 235
+                    elseif &background ==# 'dark'
+                        let l:colors[3] = 250
                     endif
                     endfor
                     let a:palette.normal = airline#themes#generate_color_map(s:N1, s:BB, s:N2)
@@ -1011,22 +1104,22 @@
     " @}
 
     " NerdTree @{
-        if isdirectory(expand("~/.vim/bundle/nerdtree"))
+        if isdirectory(expand('~/.vim/bundle/nerdtree'))
             map <C-e> <plug>NERDTreeMirrorToggle<CR>
             nmap <leader>nt :NERDTreeFind<CR>
 
-            let NERDTreeShowBookmarks=1
-            let NERDTreeRespectWildIgnore=1
-            let NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
-            let NERDTreeChDirMode=0
-            let NERDTreeMouseMode=2
+            let g:NERDTreeShowBookmarks=1
+            let g:NERDTreeRespectWildIgnore=1
+            let g:NERDTreeIgnore=['\.py[cd]$', '\~$', '\.swo$', '\.swp$', '^\.git$', '^\.hg$', '^\.svn$', '\.bzr$']
+            let g:NERDTreeChDirMode=0
+            let g:NERDTreeMouseMode=2
             " let NERDTreeShowHidden=1
-            let NERDTreeWinPos="left"
-            let NERDTreeWinSize=30
-            let NERDTreeCascadeSingleChildDir=1
-            let NERDTreeCascadeOpenSingleChildDir=1
-            let NERDTreeAutoDeleteBuffer=1
-            let NERDTreeSortOrder=['\.c$', '\.cpp$', '\.h$', '\.hpp$', '\.py$', '\.pyw$', '\.vim$', '*']
+            let g:NERDTreeWinPos='left'
+            let g:NERDTreeWinSize=30
+            let g:NERDTreeCascadeSingleChildDir=1
+            let g:NERDTreeCascadeOpenSingleChildDir=1
+            let g:NERDTreeAutoDeleteBuffer=1
+            let g:NERDTreeSortOrder=['\.c$', '\.cpp$', '\.h$', '\.hpp$', '\.py$', '\.pyw$', '\.vim$', '*']
             let g:nerdtree_tabs_open_on_gui_startup=1
             let g:nerdtree_tabs_open_on_console_startup=1
             let g:nerdtree_tabs_no_startup_for_diff=1
@@ -1035,8 +1128,8 @@
             let g:nerdtree_tabs_open_on_new_tab=1
             let g:nerdtree_tabs_synchronize_view=1
 
-            let NERDTreeMapOpenVSplit='v'
-            let NERDTreeMapOpenSplit='s'
+            let g:NERDTreeMapOpenVSplit='v'
+            let g:NERDTreeMapOpenSplit='s'
         endif
     " @}
 
@@ -1063,10 +1156,12 @@
     " @}
 
     " TagBar @{
-        if isdirectory(expand("~/.vim/bundle/tagbar/"))
+        if isdirectory(expand('~/.vim/bundle/tagbar/'))
             if !&diff
-                autocmd FileType * nested :call tagbar#autoopen(0)
-                " autocmd BufEnter * nested :call tagbar#autoopen(0)
+                augroup pkk_augroup
+                    autocmd FileType * nested :call tagbar#autoopen(0)
+                    " autocmd BufEnter * nested :call tagbar#autoopen(0)
+                augroup END
             endif
             nnoremap <silent> <leader>tt :TagbarToggle<CR>
             let g:tagbar_width = 30
@@ -1074,37 +1169,41 @@
     "@}
 
     " Validator @{
-        let g:validator_python_checkers = ['pylint', 'flake8']
-        let g:validator_cpp_checkers = ['clang-tidy']
-        let g:validator_c_checkers = ['clang-tidy']
+        if g:pkk_syntax_checker ==# 'neomake'
+            let g:validator_python_checkers = ['pylint', 'flake8']
+            let g:validator_cpp_checkers = ['clang-tidy']
+            let g:validator_c_checkers = ['clang-tidy']
 
-        " let g:validator_error_msg_format = "[ ● %d/%d issues ]"
-        let g:validator_filetype_map = {"python.django": "python"}
-        let g:validator_auto_open_quickfix = 0
-        let g:validator_no_loclist = 1
-        let g:validator_permament_sign = 1
+            " let g:validator_error_msg_format = "[ ● %d/%d issues ]"
+            let g:validator_filetype_map = {'python.django': 'python'}
+            let g:validator_auto_open_quickfix = 0
+            let g:validator_no_loclist = 1
+            let g:validator_permament_sign = 1
+        endif
     " @}
 
     " Syntastic  @{
-        set statusline+=%#warningmsg#
-        set statusline+=%{SyntasticStatuslineFlag()}
-        set statusline+=%*
+        if g:pkk_syntax_checker ==# 'syntastic'
+            set statusline+=%#warningmsg#
+            set statusline+=%{SyntasticStatuslineFlag()}
+            set statusline+=%*
 
-        let g:syntastic_c_include_dirs = [ "../include", "include", "../inc", "/usr/src/linux-headers-4.10.0-32/include/", "/usr/src/linux-headers-4.10.0-32-generic/include/" ]
-        let g:syntastic_cpp_include_dirs = [ "../include", "include", "../inc", "/usr/src/linux-headers-4.10.0-32/include/", "/usr/src/linux-headers-4.10.0-32-generic/include/" ]
-        let g:syntastic_cpp_compiler_options = "-std=c++11 -Wall -Wextra -Wpedantic"
-        let g:syntastic_always_populate_loc_list = 1
-        let g:syntastic_auto_loc_list = 1
-        let g:syntastic_check_on_open = 0
-        let g:syntastic_check_on_wq = 0
-        " let g:syntastic_enable_elixir_checker = 1
-        " let g:syntastic_elixir_checkers = ["elixir"]
+            let g:syntastic_c_include_dirs = [ '../include', 'include', '../inc', '/usr/src/linux-headers-4.10.0-32/include/', '/usr/src/linux-headers-4.10.0-32-generic/include/' ]
+            let g:syntastic_cpp_include_dirs = [ '../include', 'include', '../inc', '/usr/src/linux-headers-4.10.0-32/include/', '/usr/src/linux-headers-4.10.0-32-generic/include/' ]
+            let g:syntastic_cpp_compiler_options = '-std=c++11 -Wall -Wextra -Wpedantic'
+            let g:syntastic_always_populate_loc_list = 1
+            let g:syntastic_auto_loc_list = 1
+            let g:syntastic_check_on_open = 0
+            let g:syntastic_check_on_wq = 0
+            " let g:syntastic_enable_elixir_checker = 1
+            " let g:syntastic_elixir_checkers = ["elixir"]
 
-        function! SyntasticCheckHook(errors)
-            if !empty(a:errors)
-                let g:syntastic_loc_list_height = min([len(a:errors), 10])+1
-            endif
-        endfunction
+            function! SyntasticCheckHook(errors)
+                if !empty(a:errors)
+                    let g:syntastic_loc_list_height = min([len(a:errors), 10])+1
+                endif
+            endfunction
+        endif
     " @}
 
     " quickhl @{
@@ -1126,7 +1225,7 @@
     " @}
 
     " RainbowParentheses @{
-        if isdirectory(expand("~/.vim/bundle/rainbow/"))
+        if isdirectory(expand('~/.vim/bundle/rainbow/'))
             let g:rainbow_active = 1 "0 if you want to enable it later via :RainbowToggle
 
             nnoremap <leader>rp :RainbowToggle<CR>       " Toggle it on/off
@@ -1140,18 +1239,20 @@
             let g:go_highlight_structs = 1
             let g:go_highlight_operators = 1
             let g:go_highlight_build_constraints = 1
-            let g:go_fmt_command = "goimports"
+            let g:go_fmt_command = 'goimports'
             let g:syntastic_go_checkers = ['golint', 'govet', 'errcheck']
             let g:syntastic_mode_map = { 'mode': 'active', 'passive_filetypes': ['go'] }
-            au FileType go nmap <Leader>s <Plug>(go-implements)
-            au FileType go nmap <Leader>i <Plug>(go-info)
-            au FileType go nmap <Leader>e <Plug>(go-rename)
-            au FileType go nmap <leader>r <Plug>(go-run)
-            au FileType go nmap <leader>b <Plug>(go-build)
-            au FileType go nmap <leader>t <Plug>(go-test)
-            au FileType go nmap <Leader>gd <Plug>(go-doc)
-            au FileType go nmap <Leader>gv <Plug>(go-doc-vertical)
-            au FileType go nmap <leader>co <Plug>(go-coverage)
+            augroup pkk_augroup
+                au FileType go nmap <Leader>s <Plug>(go-implements)
+                au FileType go nmap <Leader>i <Plug>(go-info)
+                au FileType go nmap <Leader>e <Plug>(go-rename)
+                au FileType go nmap <leader>r <Plug>(go-run)
+                au FileType go nmap <leader>b <Plug>(go-build)
+                au FileType go nmap <leader>t <Plug>(go-test)
+                au FileType go nmap <Leader>gd <Plug>(go-doc)
+                au FileType go nmap <Leader>gv <Plug>(go-doc-vertical)
+                au FileType go nmap <leader>co <Plug>(go-coverage)
+            augroup END
         endif
         " @}
 
@@ -1178,14 +1279,14 @@
     " @}
 
     " PIV @{
-        if isdirectory(expand("~/.vim/bundle/PIV"))
+        if isdirectory(expand('~/.vim/bundle/PIV'))
             let g:DisableAutoPHPFolding = 0
             let g:PIVAutoClose = 0
         endif
     " @}
 
     " matchit @{
-        if isdirectory(expand("~/.vim/bundle/matchit.zip"))
+        if isdirectory(expand('~/.vim/bundle/matchit.zip'))
             let b:match_ignorecase = 1
         endif
     " @}
@@ -1193,7 +1294,7 @@
     " OmniComplete @{
         "   let g:pkk_no_omni_complete = 1
         if !exists('g:pkk_no_omni_complete')
-            if has("autocmd") && exists("+omnifunc")
+            if has('autocmd') && exists('+omnifunc')
                 autocmd Filetype *
                     \if &omnifunc == "" |
                     \setlocal omnifunc=syntaxcomplete#Complete |
@@ -1224,14 +1325,14 @@
         set tags=./tags;/,~/.vimtags
 
         " Make tags placed in .git/tags file available in all levels of a repository
-        let gitroot = substitute(system('git rev-parse --show-toplevel'), '[\n\r]', '', 'g')
-        if gitroot != ''
-            let &tags = &tags . ',' . gitroot . '/.git/tags'
+        let g:gitroot = substitute(system('git rev-parse --show-toplevel'), '[\n\r]', '', 'g')
+        if g:gitroot !=# ''
+            let &tags = &tags . ',' . g:gitroot . '/.git/tags'
         endif
     " @}
 
     " Tabularize @{
-        if isdirectory(expand("~/.vim/bundle/tabular"))
+        if isdirectory(expand('~/.vim/bundle/tabular'))
             nmap <Leader>a& :Tabularize /&<CR>
             vmap <Leader>a& :Tabularize /&<CR>
             nmap <Leader>a= :Tabularize /^[^=]*\zs=<CR>
@@ -1253,7 +1354,7 @@
 
     " Session List @{
         set sessionoptions=blank,buffers,curdir,folds,tabpages,winsize
-        if isdirectory(expand("~/.vim/bundle/sessionman.vim/"))
+        if isdirectory(expand('~/.vim/bundle/sessionman.vim/'))
             nmap <leader>sl :SessionList<CR>
             nmap <leader>ss :SessionSave<CR>
             nmap <leader>sc :SessionClose<CR>
@@ -1266,7 +1367,7 @@
     " @}
 
     " Fugitive @{
-        if isdirectory(expand("~/.vim/bundle/vim-fugitive/"))
+        if isdirectory(expand('~/.vim/bundle/vim-fugitive/'))
             nnoremap <silent> <leader>gs :Gstatus<CR>
             nnoremap <silent> <leader>gd :Gdiff<CR>
             nnoremap <silent> <leader>gc :Gcommit<CR>
@@ -1295,32 +1396,38 @@
             let g:UltiSnipsExpandTrigger = '<C-j>'
             let g:UltiSnipsJumpForwardTrigger = '<C-j>'
             let g:UltiSnipsJumpBackwardTrigger = '<C-k>'
-            let g:UltiSnipsEditSplit="vertical" " If you want :UltiSnipsEdit to split your window.
+            let g:UltiSnipsEditSplit='vertical' " If you want :UltiSnipsEdit to split your window.
 
             " Enable omni completion.
-            autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-            autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-            autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-            autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-            autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-            autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
-            autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+            augroup pkk_augroup
+                autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+                autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+                autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+                autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+                autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+                autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+                autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+            augroup END
 
             " Haskell post write lint and check with ghcmod
             " $ `cabal install ghcmod` if missing and ensure
             " ~/.cabal/bin is in your $PATH.
-            if !executable("ghcmod")
-                autocmd BufWritePost *.hs GhcModCheckAndLintAsync
+            if !executable('ghcmod')
+                augroup pkk_augroup
+                    autocmd BufWritePost *.hs GhcModCheckAndLintAsync
+                augroup END
             endif
 
             " For snippet_complete marker.
-            if !exists("g:pkk_no_conceal")
+            if !exists('g:pkk_no_conceal')
                 if has('conceal')
                     set conceallevel=2 concealcursor=i
                 endif
             endif
 
-            au FileType python map <C-]>  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+            augroup pkk_augroup
+                au FileType python map <C-]>  :YcmCompleter GoToDefinitionElseDeclaration<CR>
+            augroup END
 
             " Disable the neosnippet preview candidate window
             " When enabled, there can be too much visual noise
@@ -1389,8 +1496,8 @@
                     function! CleverCr()
                         if pumvisible()
                             if neosnippet#expandable()
-                                let exp = "\<Plug>(neosnippet_expand)"
-                                return exp . neocomplete#smart_close_popup()
+                                let l:exp = "\<Plug>(neosnippet_expand)"
+                                return l:exp . neocomplete#smart_close_popup()
                             else
                                 return neocomplete#smart_close_popup()
                             endif
@@ -1415,9 +1522,9 @@
                     if pumvisible()
                         return "\<C-n>"
                     endif
-                    let substr = strpart(getline('.'), 0, col('.') - 1)
-                    let substr = matchstr(substr, '[^ \t]*$')
-                    if strlen(substr) == 0
+                    let l:substr = strpart(getline('.'), 0, col('.') - 1)
+                    let l:substr = matchstr(l:substr, '[^ \t]*$')
+                    if strlen(l:substr) == 0
                         " nothing to match on empty string
                         return "\<Tab>"
                     else
@@ -1497,8 +1604,8 @@
                     function! CleverCr()
                         if pumvisible()
                             if neosnippet#expandable()
-                                let exp = "\<Plug>(neosnippet_expand)"
-                                return exp . neocomplcache#close_popup()
+                                let l:exp = "\<Plug>(neosnippet_expand)"
+                                return l:exp . neocomplcache#close_popup()
                             else
                                 return neocomplcache#close_popup()
                             endif
@@ -1525,13 +1632,15 @@
             " @}
 
             " Enable omni completion.
-            autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-            autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-            autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-            autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-            autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-            autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
-            autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+            augroup pkk_augroup
+                autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+                autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+                autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+                autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+                autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+                autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+                autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+            augroup END
 
             " Enable heavy omni completion.
             if !exists('g:neocomplcache_omni_patterns')
@@ -1556,14 +1665,14 @@
             let g:neosnippet#enable_snipmate_compatibility = 1
 
             " For snippet_complete marker.
-            if !exists("g:pkk_no_conceal")
+            if !exists('g:pkk_no_conceal')
                 if has('conceal')
                     set conceallevel=2 concealcursor=i
                 endif
             endif
 
             " Enable neosnippets when using go
-            let g:go_snippet_engine = "neosnippet"
+            let g:go_snippet_engine = 'neosnippet'
 
             " Disable the neosnippet preview candidate window
             " When enabled, there can be too much visual noise
@@ -1575,19 +1684,21 @@
     " Normal Vim omni-completion @{
             elseif !exists('g:pkk_no_omni_complete')
                 " Enable omni-completion.
-                autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
-                autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
-                autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
-                autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
-                autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
-                autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
-                autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+                augroup pkk_augroup
+                    autocmd FileType css setlocal omnifunc=csscomplete#CompleteCSS
+                    autocmd FileType html,markdown setlocal omnifunc=htmlcomplete#CompleteTags
+                    autocmd FileType javascript setlocal omnifunc=javascriptcomplete#CompleteJS
+                    autocmd FileType python setlocal omnifunc=pythoncomplete#Complete
+                    autocmd FileType xml setlocal omnifunc=xmlcomplete#CompleteTags
+                    autocmd FileType ruby setlocal omnifunc=rubycomplete#Complete
+                    autocmd FileType haskell setlocal omnifunc=necoghc#omnifunc
+                augroup END
 
             endif
     " @}
 
     " UndoTree @{
-        if isdirectory(expand("~/.vim/bundle/undotree/"))
+        if isdirectory(expand('~/.vim/bundle/undotree/'))
             nnoremap <Leader>u :UndotreeToggle<CR>
             " If undotree is opened, it is likely one wants to interact with it.
             let g:undotree_SetFocusWhenToggle=1
@@ -1595,7 +1706,7 @@
     " @}
 
     " indent_guides @{
-        if isdirectory(expand("~/.vim/bundle/vim-indent-guides/"))
+        if isdirectory(expand('~/.vim/bundle/vim-indent-guides/'))
             let g:indent_guides_enable_on_vim_startup = 1
             let g:indent_guides_start_level = 2
             let g:indent_guides_guide_size = 1
@@ -1609,7 +1720,7 @@
                 let g:indent_guides_color_change_percent = 3
             else
                 let g:indent_guides_auto_colors = 0
-                if &background == 'dark'
+                if &background ==# 'dark'
                     hi IndentGuidesOdd  ctermbg=236
                     hi IndentGuidesEven ctermbg=237
                 else
@@ -1622,8 +1733,8 @@
 
     " Wildfire @{
     let g:wildfire_objects = {
-                \ "*" : ["i'", 'i"', "i)", "i]", "i}", "ip"],
-                \ "html,xml" : ["at"],
+                \ '*' : ["i'", 'i"', 'i)', 'i]', 'i}', 'ip'],
+                \ 'html,xml' : ['at'],
                 \ }
     " @}
 
@@ -1639,13 +1750,9 @@
         let g:qs_second_occurrence_highlight_color = 81         " terminal vim
     " @}
 
-    " asterisk improved @{
-        map *  <Plug>(asterisk-z*)
-        map #  <Plug>(asterisk-z#)
-        map g* <Plug>(asterisk-gz*)
-        map g# <Plug>(asterisk-gz#)
-
-        " let g:asterisk#keeppos = 1
+    " Indexed Search @{
+        let g:indexed_search_dont_move = 1
+        let g:indexed_search_line_info = 1
     " @}
 
     " simplyFold @{
@@ -1666,9 +1773,6 @@
     set matchtime=3  " Time to show matching paranthesis
     set title " Set title to window
 
-    if LINUX()
-        set term=screen-256color "give us 256 color schemes!
-    endif
     if !has('gui')
         set term=$TERM          " Make arrow and other keys work
         set term=screen-256color "give us 256 color schemes!
@@ -1697,7 +1801,9 @@
     " Most prefer to automatically switch to the current file directory when
     " a new buffer is opened
     if !exists('g:pkk_no_autochdir')
-        autocmd BufEnter * if bufname("") !~ "^\[A-Za-z0-9\]*://" | lcd %:p:h | endif
+        augroup pkk_augroup
+            autocmd BufEnter * if bufname("") !~ "^\[A-Za-z0-9\]*://" | lcd %:p:h | endif
+        augroup END
         " Always switch to the current file directory
     endif
 
@@ -1716,13 +1822,15 @@
 
     " Instead of reverting the cursor to the last position in the buffer, we
     " set it to the first line when editing a git commit message
-    au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
+    augroup pkk_augroup
+        au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
+    augroup END
 
     " Restore cursor to file position in previous editing session
     " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
     if !exists('g:pkk_no_restore_cursor')
         function! ResCur()
-            if line("'\"") <= line("$")
+            if line("'\"") <= line('$')
                 silent! normal! g`"
                 return 1
             endif
@@ -1751,20 +1859,28 @@
         endif
     " @}
 
-    if executable("ag")
+    if executable('ag')
       set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column
       set grepformat=%f:%l:%c:%m,%f:%l:%m
     endif
 
     function! NeatFoldText()
-        let line = ' ' . substitute(getline(v:foldstart), '^\s*"\?\s*\|\s*"\?\s*{{' . '{\d*\s*', '', 'g') . ' '
-        let lines_count = v:foldend - v:foldstart + 1
-        let lines_count_text = '| ' . printf("%10s", lines_count . ' lines') . ' |'
-        let foldchar = matchstr(&fillchars, 'fold:\zs.')
-        let foldtextstart = strpart('+' . repeat(foldchar, ((v:foldlevel - 1)*&softtabstop) - 1) . line, 0, (winwidth(0)*2)/3)
-        let foldtextend = lines_count_text . repeat(foldchar, 8)
-        let foldtextlength = strlen(substitute(foldtextstart . foldtextend, '.', 'x', 'g')) + &foldcolumn
-        return foldtextstart . repeat(foldchar, winwidth(0)-foldtextlength) . foldtextend
+        let l:indent = repeat(' ', indent(v:foldstart))
+        let l:line2 = ''
+        if &filetype ==# 'xml'
+            let l:temp = substitute(getline(v:foldstart + 1), '\s\+', '', 'g')
+            if strpart(l:temp, 1, 10) ==# 'SHORT-NAME'
+                let l:line2 = '-> ' . substitute(l:temp, '<[^>]*>', '', 'g') . ' '
+            endif
+        endif
+        let l:line = l:indent . substitute(getline(v:foldstart), '\(\S\)\@<=\(\s\{4}\s*\|\t\)\| *{.*[^}]*$\|^\s\+', '', 'g') . ' ' . l:line2
+        let l:lines_count = v:foldend - v:foldstart + 1
+        let l:lines_count_text = '| ' . printf('%10s', l:lines_count . ' lines') . ' |'
+        let l:foldchar = matchstr(&fillchars, 'fold:\zs.')
+        let l:foldtextstart = strpart(l:line, 0, (winwidth(0)*2)/3)
+        let l:foldtextend = l:lines_count_text . repeat(l:foldchar, 8)
+        let l:foldtextlength = strlen(substitute(l:foldtextstart . l:foldtextend, '.', 'x', 'g')) + &foldcolumn
+        return l:foldtextstart . repeat(l:foldchar, winwidth(0)- l:foldtextlength) . l:foldtextend
     endfunction
 
     set foldtext=NeatFoldText()
@@ -1788,7 +1904,7 @@
         colorscheme PkkPaperColor
         set background=dark
         set cursorline
-        if &bg == 'light'
+        if &background ==# 'light'
             hi CursorLine   gui=NONE cterm=NONE ctermbg=7 ctermfg=NONE
         else
             hi CursorLine   gui=NONE cterm=NONE ctermbg=237 ctermfg=NONE
@@ -1864,7 +1980,9 @@
     set wildignore+=*.orig,*.rej "Merge resolution files"
 
     " Resize Split When the window is resized"
-    au VimResized * :wincmd =
+    augroup pkk_augroup
+        au VimResized * :wincmd =
+    augroup END
 
 " @}
 
@@ -1872,12 +1990,12 @@
 
     " GVIM- (here instead of .gvimrc)
     if has('gui_running')
-        if !exists("g:pkk_no_big_font")
-            if LINUX() && has("gui_running")
+        if !exists('g:pkk_no_big_font')
+            if LINUX() && has('gui_running')
                 set guifont=Source\ Code\ Pro\ for\ Powerline\ Regular\ 10,Andale\ Mono\ Regular\ 10,Menlo\ Regular\ 11,Consolas\ Regular\ 12,Courier\ New\ Regular\ 14
-            elseif OSX() && has("gui_running")
+            elseif OSX() && has('gui_running')
                 set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,Consolas\ Regular:h12,Courier\ New\ Regular:h14
-            elseif WINDOWS() && has("gui_running")
+            elseif WINDOWS() && has('gui_running')
                 set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,Andale_Mono:h10,Menlo:h10,Consolas:h10.2,Courier_New:h10
             endif
         endif
@@ -1885,9 +2003,15 @@
         set guioptions-=T           " Remove the toolbar
         set guioptions-=m           " Remove the menubar
         "set lines=40                " 40 lines of text instead of 24
-        au GUIEnter * simalt ~x     " Maxize the vim window
+        if WINDOWS()
+            augroup pkk_augroup
+                au GUIEnter * simalt ~x     " Maxize the vim window
+            augroup END
+        else
+            set lines=41 columns=155
+        endif
     else
-        if &term == 'xterm' || &term == 'screen'
+        if &term ==# 'xterm' || &term ==# 'screen'
             set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
         endif
         "set term=builtin_ansi       " Make arrow and other keys work
@@ -1917,16 +2041,15 @@
 
     " au command for each filetypes
     "autocmd FileType go autocmd BufWritePre <buffer> Fmt
-    autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
-    autocmd FileType haskell,puppet,ruby,yml,html,xml,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
+    augroup pkk_augroup
+        autocmd FileType haskell,puppet,ruby,yml,html,xml,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
 
-    autocmd BufNewFile,BufRead *.coffee set filetype=coffee
+        " Workaround vim-commentary for Haskell
+        autocmd FileType haskell setlocal commentstring=--\ %s
 
-    " Workaround vim-commentary for Haskell
-    autocmd FileType haskell setlocal commentstring=--\ %s
-
-    " Workaround broken colour highlighting in Haskell
-    autocmd FileType haskell,rust setlocal nospell
+        " Workaround broken colour highlighting in Haskell
+        autocmd FileType haskell,rust setlocal nospell
+    augroup END
 
     " Automatically go to the end of pasted text
     vnoremap <silent> y y`]
@@ -1941,20 +2064,24 @@
     au BufNewfile,BufRead syslog* set filetype=messages
 
     " Remove trailing whitespaces and ^M chars while saving file
-    autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
+    augroup pkk_augroup
+        autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
+    augroup END
 
 " @}
 
 " Programming @{
 
     let g:xml_syntax_folding = 1
-    au FileType xml setlocal foldmethod=syntax foldlevel=0
+    augroup pkk_augroup
+        au FileType xml setlocal foldmethod=syntax foldlevel=0
+    augroup END
 
     " setup environment for C and CPP
     au BufNewFile,BufRead *.c,*.cc,*.cpp,*.h call SetupCandCPPenviron()
 
     " Python @{
-        let python_highlight_all=1
+        let g:python_highlight_all=1
     " @}
 
 " @}
@@ -2074,14 +2201,14 @@
     if !exists('g:pkk_no_wrapRelMotion')
         " Same for 0, home, end, etc
         function! WrapRelativeMotion(key, ...)
-            let vis_sel=""
+            let l:vis_sel=''
             if a:0
-                let vis_sel="gv"
+                let l:vis_sel='gv'
             endif
             if &wrap
-                execute "normal!" vis_sel . "g" . a:key
+                execute 'normal!' l:vis_sel . 'g' . a:key
             else
-                execute "normal!" vis_sel . a:key
+                execute 'normal!' l:vis_sel . a:key
             endif
         endfunction
 
@@ -2218,7 +2345,7 @@
 
     " Move to beginning of next word, skipping non-word characters
     function! NextWord() range
-        for i in range(1,v:count1)
+        for l:i in range(1,v:count1)
             call search('\W*\<\w', 'eW')
         endfor
     endfunction
@@ -2239,8 +2366,10 @@
 
     " Manpage for word under cursor via 'M' in command moderuntime
     runtime ftplugin/man.vim
-    au FileType c,cpp,h,hpp,sh,shell noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
-    au FileType vim noremap <buffer> <silent> M :h <C-R>=expand('<cword>')<CR><CR>
+    augroup pkk_augroup
+        au FileType c,cpp,h,hpp,sh,shell noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
+        au FileType vim noremap <buffer> <silent> M :h <C-R>=expand('<cword>')<CR><CR>
+    augroup END
 
     " Make Sure that Vim returns to the same line when we reopen a file"
     augroup line_return
@@ -2264,13 +2393,11 @@
     vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
     vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
 
-    " search but say in the current search occurance
-    nmap * *N
-    nmap # #n
-
     set backupskip=/tmp/*,/private/tmp/*" " Make Vim able to edit corntab fiels again.
 
-    autocmd VimEnter * helptags ~/.vim/doc
+    augroup pkk_augroup
+        autocmd VimEnter * helptags ~/.vim/doc
+    augroup END
 
     " Force Saving Files that Require Root Permission
     command! Sudowrite w !sudo tee % > /dev/null
