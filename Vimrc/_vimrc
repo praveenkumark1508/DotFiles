@@ -178,26 +178,31 @@
 
     " General @{
         if count(g:pkk_bundle_groups, 'general')
-            Plugin 'mtth/scratch.vim'
-            Plugin 'romainl/vim-qf'  " Tame quickfix window
-            Plugin 'tpope/vim-unimpaired'
-            Plugin 'ervandew/supertab'
             " Plugin 'tpope/vim-dispatch'             " run tasks in background
             Plugin 'skywind3000/asyncrun.vim'             " run tasks in background
-            Plugin 'henrik/vim-indexed-search'            " Search results counter
 
-            Bundle 'scrooloose/nerdtree'
-            Bundle 'kshenoy/vim-signature'
-            " Bundle 'altercation/vim-colors-solarized'
-            Bundle 'tpope/vim-surround'
-            Bundle 'tpope/vim-repeat'
-            Bundle 'rhysd/conflict-marker.vim'
-            Bundle 'jiangmiao/auto-pairs'
             Bundle 'ctrlpvim/ctrlp.vim'
             Bundle 'tacahiroy/ctrlp-funky'
-            Bundle 'terryma/vim-multiple-cursors'
-            Bundle 'vim-scripts/sessionman.vim'
-            Bundle 'matchit.zip'
+
+            Plugin 'ntpeters/vim-better-whitespace'
+            Plugin 'tpope/vim-unimpaired'
+            Plugin 'henrik/vim-indexed-search'            " Search results counter
+            Plugin 'ervandew/supertab'
+            Bundle 'kshenoy/vim-signature'
+            Bundle 'tpope/vim-surround'
+            Bundle 'tmhedberg/matchit'
+            Bundle 'jiangmiao/auto-pairs'
+            Bundle 'easymotion/vim-easymotion'
+            Plugin 'rhysd/accelerated-jk'
+            Plugin 't9md/vim-quickhl'
+
+            Bundle 'scrooloose/nerdtree'
+            Bundle 'jistr/vim-nerdtree-tabs'
+            Plugin 'mtth/scratch.vim'
+            Plugin 'romainl/vim-qf'  " Tame quickfix window
+            Bundle 'mbbill/undotree'
+            Bundle 'nathanaelkane/vim-indent-guides'
+
             if (has('python') || has('python3')) && exists('g:pkk_use_powerline')
                 Bundle 'Lokaltog/powerline', {'rtp':'/powerline/bindings/vim'}
             else
@@ -205,32 +210,32 @@
                 Bundle 'vim-airline/vim-airline-themes'
             endif
             Bundle 'powerline/fonts'
-            Bundle 'bling/vim-bufferline'
-            Bundle 'easymotion/vim-easymotion'
-            Bundle 'jistr/vim-nerdtree-tabs'
             Bundle 'flazz/vim-colorschemes'
             "Plugin 'rafi/awesome-vim-colorschemes'
-            Bundle 'mbbill/undotree'
-            Bundle 'nathanaelkane/vim-indent-guides'
+            " Bundle 'altercation/vim-colors-solarized'
+
             if !exists('g:pkk_no_views')
                 Bundle 'vim-scripts/restore_view.vim'
             endif
+            Bundle 'vim-scripts/sessionman.vim'
             Bundle 'mhinz/vim-signify'
-            Bundle 'tpope/vim-abolish.git'
+            Bundle 'tpope/vim-abolish'
             Bundle 'osyo-manga/vim-over'
             Bundle 'kana/vim-textobj-user'
-            Bundle 'kana/vim-textobj-indent'
+            Plugin 'kana/vim-operator-user'
+            Plugin 'kana/vim-textobj-indent' " selecting similar indent blocks
+
             Bundle 'gcmt/wildfire.vim'
             Plugin 'itchyny/vim-cursorword'
-            Plugin 'haya14busa/vim-asterisk'
-            Plugin 'rhysd/accelerated-jk'
-            Plugin 't9md/vim-quickhl'
+            Bundle 'tpope/vim-repeat'
+            Bundle 'rhysd/conflict-marker.vim'
+            Bundle 'terryma/vim-multiple-cursors'
         endif
     " @}
 
     " Writing @{
         if count(g:pkk_bundle_groups, 'writing')
-            Plugin 'Txtfmt-The-Vim-Highlighter'     " Text highliter and formatter
+            " Plugin 'Txtfmt-The-Vim-Highlighter'     " Text highliter and formatter
             Bundle 'reedes/vim-litecorrect'
             Bundle 'reedes/vim-textobj-sentence'
             Bundle 'reedes/vim-textobj-quote'
@@ -303,6 +308,7 @@
 
     " C/CPP @{
         if count(g:pkk_bundle_groups, 'c')
+            Plugin 'rhysd/vim-clang-format'
             Plugin 'hari-rangarajan/CCTree'
             Plugin 'Rip-Rip/clang_complete'
             Plugin 'LucHermitte/VimFold4C'
@@ -313,23 +319,21 @@
     " Python @{
         if count(g:pkk_bundle_groups, 'python')
             " Plugin 'davidhalter/jedi-vim'
+            " Plugin 'python-rope/ropevim'
             Plugin 'klen/python-mode'
-
-            Plugin 'joonty/vdebug'
-            Plugin 'vim-scripts/indentpython.vim' " Python indent handling
-            Plugin 'yssource/python.vim' " Provides some utility select, move and modify code.
             Plugin 'python_match.vim' " Jump to if else end, for break,
-            Plugin 'pythoncomplete' " Autocomplete. dynamic type deduction and etc.
+            Plugin 'joonty/vdebug'
+            Plugin 'yssource/python.vim' " Provides some utility select, move and modify code.
         endif
     " @}
 
     " HTML @{
         if count(g:pkk_bundle_groups, 'html')
             Bundle 'hail2u/vim-css3-syntax'
-            Plugin 'ap/vim-css-color'
+            " Plugin 'chrisbra/Colorizer'
             Plugin 'othree/xml.vim'
             Bundle 'tpope/vim-haml'
-            Bundle 'mattn/emmet-vim'
+            " Bundle 'mattn/emmet-vim'  " editing html files
         endif
     " @}
 
@@ -407,11 +411,8 @@
 
     " Misc @{
         if count(g:pkk_bundle_groups, 'misc')
-            Bundle 'rust-lang/rust.vim'
             Bundle 'tpope/vim-markdown'
             Bundle 'greyblake/vim-preview'  "Preview for markdow language
-            Bundle 'cespare/vim-toml'       "Syntax highlighting for TOML
-            Bundle 'saltstack/salt-vim'     "Vim files for working on Salt files
         endif
     " @}
 
@@ -616,20 +617,6 @@
         endfunction
     " @}
 
-    " Strip whitespace @{
-        function! StripTrailingWhitespace()
-            " Preparation: save last search, and cursor position.
-            let l:_s=@/
-            let l:l = line('.')
-            let l:c = col('.')
-            " do the business:
-            %s/\s\+$//e
-            " clean up: restore previous search history, and cursor position
-            let @/=l:_s
-            call cursor(l:l, l:c)
-        endfunction
-    " @}
-
     " Shell command @{
         function! s:RunShellCommand(cmdline)
             botright new
@@ -744,6 +731,8 @@
                         \   'vim': ['vint'],
                         \}
 
+            let g:ale_python_flake8_options = '--max-complexity 10'
+
             " Enable completion where available.
             let g:ale_completion_enabled = 1
 
@@ -753,7 +742,7 @@
 
             let g:ale_echo_msg_error_str = 'E'
             let g:ale_echo_msg_warning_str = 'W'
-            let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
+            let g:ale_echo_msg_format = '[%linter%]: (%code%) %s [%severity%]'
 
             let g:ale_lint_on_text_changed = 'always'
             let g:ale_lint_on_enter = 1
@@ -774,6 +763,30 @@
 
     " Ultisnips @{
         let g:UltiSnipsSnippetDirectories = ['~/.vim/UltiSnips', 'UltiSnips']
+    " @}
+
+    " Clang-Format @{
+        let g:clang_format#command = 'clang-format'
+        let g:clang_format#code_style = 'google'
+        let g:clang_format#style_options = {
+                    \ 'AccessModifierOffset' : -4,
+                    \ 'AllowShortFunctionsOnASingleLine': 'false',
+                    \ 'AllowShortIfStatementsOnASingleLine' : 'false',
+                    \ 'AlwaysBreakTemplateDeclarations' : 'true',
+                    \ 'Standard' : 'C++11'}
+
+        let g:clang_format#auto_format = 1
+
+        augroup pkk_augroup
+            autocmd FileType c,cpp,objc ClangFormatAutoEnable
+            " map to <Leader>cf in C++ code
+            autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
+            autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
+            " if you install vim-operator-user
+            autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
+        augroup END
+        " Toggle auto formatting:
+        nmap <Leader>C :ClangFormatAutoToggle<CR>
     " @}
 
     " Clang-Complete @{
@@ -866,6 +879,9 @@
             let g:neomake_c_clang_maker = g:neomake_cpp_clang_maker
 
             let g:neomake_python_enabled_makers = ['pylint', 'flake8']
+            let g:neomake_cpp_clang_maker = {
+                        \ 'args': [ '--max-complexity', '10', ]
+                        \ }
 
             let g:neomake_vim_enabled_makers = ['vint']
 
@@ -974,6 +990,19 @@
         "nnoremap <leader>b Oimport ipdb; ipdb.set_trace()<Esc>
     " @}
 
+    " Rope-Vim @{
+        let g:ropevim_vim_completion=1
+        let g:ropevim_extended_complete=1
+        let g:ropevim_autoimport_modules = ['os', 'shutil']
+        let g:ropevim_codeassist_maxfixes = 50
+        let g:ropevim_enable_shortcuts = 1
+        let g:ropevim_guess_project = 1
+
+        let g:ropevim_enable_autoimport = 1
+        let g:ropevim_autoimport_underlineds = 1
+        let g:ropevim_goto_def_newwin = 'tabnew'
+    " @}
+
     " SnipMate @{
         " Setting the author var
         let g:snips_author = 'Praveen Kumar K <praveenkumark1508@gmail.com>'
@@ -1000,7 +1029,7 @@
                 let s:ctrlp_fallback = 'find %s -type f'
             endif
 
-            nnoremap <silent> <C-m> :CtrlPMRU<CR>
+            nnoremap <silent> <leader>m :CtrlPMRU<CR>
             let g:ctrlp_custom_ignore = {
                 \ 'dir':  '\.git$\|\.hg$\|\.svn$\|_builds$',
                 \ 'file': '\.exe$\|\.so$\|\.dll$\|\.pyc$' }
@@ -1171,8 +1200,9 @@
     " Validator @{
         if g:pkk_syntax_checker ==# 'neomake'
             let g:validator_python_checkers = ['pylint', 'flake8']
-            let g:validator_cpp_checkers = ['clang-tidy']
-            let g:validator_c_checkers = ['clang-tidy']
+            let g:validator_cpp_checkers = ['clang']
+            let g:validator_c_checkers = ['clang']
+            let g:validator_vim_checkers = ['vint']
 
             " let g:validator_error_msg_format = "[ ● %d/%d issues ]"
             let g:validator_filetype_map = {'python.django': 'python'}
@@ -1207,8 +1237,8 @@
     " @}
 
     " quickhl @{
-        nmap <Space>m <Plug>(quickhl-manual-this)
-        xmap <Space>m <Plug>(quickhl-manual-this)
+        nmap <Space>h <Plug>(quickhl-manual-this)
+        xmap <Space>h <Plug>(quickhl-manual-this)
 
         nmap <Space>w <Plug>(quickhl-manual-this-whole-word)
         xmap <Space>w <Plug>(quickhl-manual-this-whole-word)
@@ -1216,12 +1246,12 @@
         nmap <Space>c <Plug>(quickhl-manual-clear)
         vmap <Space>c <Plug>(quickhl-manual-clear)
 
-        nmap <Space>M <Plug>(quickhl-manual-reset)
-        xmap <Space>M <Plug>(quickhl-manual-reset)
+        nmap <Space>H <Plug>(quickhl-manual-reset)
+        xmap <Space>H <Plug>(quickhl-manual-reset)
 
         nmap <Space>j <Plug>(quickhl-cword-toggle)
         nmap <Space>] <Plug>(quickhl-tag-toggle)
-        map H <Plug>(operator-quickhl-manual-this-motion)
+        map M <Plug>(operator-quickhl-manual-this-motion)
     " @}
 
     " RainbowParentheses @{
@@ -1231,6 +1261,12 @@
             nnoremap <leader>rp :RainbowToggle<CR>       " Toggle it on/off
         endif
 " @}
+
+    " Vim-Colorizer @{
+        let g:colorizer_auto_filetype='css,html,vim'
+        let g:colorizer_skip_comments = 1
+        let g:colorizer_x11_names = 1
+    " @}
 
     " GoLang @{
         if count(g:pkk_bundle_groups, 'go')
@@ -1276,6 +1312,18 @@
                 autocmd FileType text call textobj#quote#init({'educate': 0})
             augroup END
         endif
+    " @}
+
+    " vim-better-whitespaces @{
+        nnoremap <leader>tw :ToggleWhitespace<CR>
+        nnoremap <leader>ws :StripWhitespace<CR>
+
+        " Remove trailing whitespaces and ^M chars while saving file
+        augroup pkk_augroup
+            autocmd FileType vim,perl autocmd BufEnter <buffer> EnableStripWhitespaceOnSave
+        augroup END
+
+        let g:better_whitespace_filetypes_blacklist=['c', 'cpp', 'h', 'hpp', 'xml', 'arxml', 'diff', 'gitcommit', 'unite', 'qf', 'help', 'markdown']
     " @}
 
     " PIV @{
@@ -1773,11 +1821,6 @@
     set matchtime=3  " Time to show matching paranthesis
     set title " Set title to window
 
-    if !has('gui')
-        set term=$TERM          " Make arrow and other keys work
-        set term=screen-256color "give us 256 color schemes!
-    endif
-
     " enable matchit plugin which extends usage of % operator to match
     " more words ex. if/end def/end html tags etc.
     runtime macros/matchit.vim
@@ -1959,7 +2002,7 @@
     set scrolloff=3                 " Minimum lines to keep above and below cursor
     set sidescrolloff=5     " Keep at least 5 lines left/right
     set foldenable                  " Auto fold code
-    set list                        " Show whitespaces as characters
+    " set list                        " Show whitespaces as characters
     set listchars=tab:│\ ,trail:•,extends:#,nbsp:. " Highlight problematic whitespace
 
     set noshowmode
@@ -1991,18 +2034,18 @@
     " GVIM- (here instead of .gvimrc)
     if has('gui_running')
         if !exists('g:pkk_no_big_font')
-            if LINUX() && has('gui_running')
+            if LINUX()
                 set guifont=Source\ Code\ Pro\ for\ Powerline\ Regular\ 10,Andale\ Mono\ Regular\ 10,Menlo\ Regular\ 11,Consolas\ Regular\ 12,Courier\ New\ Regular\ 14
-            elseif OSX() && has('gui_running')
+            elseif OSX()
                 set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,Consolas\ Regular:h12,Courier\ New\ Regular:h14
-            elseif WINDOWS() && has('gui_running')
+            elseif WINDOWS()
                 set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,Andale_Mono:h10,Menlo:h10,Consolas:h10.2,Courier_New:h10
             endif
         endif
 
         set guioptions-=T           " Remove the toolbar
         set guioptions-=m           " Remove the menubar
-        "set lines=40                " 40 lines of text instead of 24
+
         if WINDOWS()
             augroup pkk_augroup
                 au GUIEnter * simalt ~x     " Maxize the vim window
@@ -2014,7 +2057,7 @@
         if &term ==# 'xterm' || &term ==# 'screen'
             set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
         endif
-        "set term=builtin_ansi       " Make arrow and other keys work
+        set term=screen-256color "give us 256 color schemes!
     endif
 
 " @}
@@ -2062,11 +2105,6 @@
     au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
     au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
     au BufNewfile,BufRead syslog* set filetype=messages
-
-    " Remove trailing whitespaces and ^M chars while saving file
-    augroup pkk_augroup
-        autocmd FileType c,cpp,java,go,php,javascript,puppet,python,rust,twig,xml,yml,perl,sql autocmd BufWritePre <buffer> call StripTrailingWhitespace()
-    augroup END
 
 " @}
 
@@ -2307,9 +2345,6 @@
 
     "Enable folding with the 's'
     nnoremap s za
-
-    " Strip trailing whitespace and ^M character
-    nnoremap <leader>ws :call StripTrailingWhitespace()<CR>
 
     " insert newline without entering into insert mode
     nnoremap <leader><CR> o<Esc>
