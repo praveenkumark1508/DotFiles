@@ -89,14 +89,17 @@
 
 " options @{
 
+    " Python develop environment setting
+        let g:pkk_python_setting = ['jedi', 'pymode']
+
     " Prevent automatically changing to open file directory
-       let g:pkk_no_autochdir = 1
+        let g:pkk_no_autochdir = 1
 
     " Disable views
-       let g:pkk_no_views = 1
+        let g:pkk_no_views = 1
 
     " Prefered Syntax checker
-    let g:pkk_syntax_checker = 'ale'
+        let g:pkk_syntax_checker = 'ale'
 
     " Disable wrap relative motion for start/end line motions
     "   let g:pkk_no_wrapRelMotion = 1
@@ -318,9 +321,13 @@
 
     " Python @{
         if count(g:pkk_bundle_groups, 'python')
-            " Plugin 'davidhalter/jedi-vim'
+            if count(g:pkk_python_setting, 'jedi')
+                Plugin 'davidhalter/jedi-vim'
+            endif
+            if count(g:pkk_python_setting, 'pymode')
+                Plugin 'klen/python-mode'
+            endif
             " Plugin 'python-rope/ropevim'
-            Plugin 'klen/python-mode'
             Plugin 'python_match.vim' " Jump to if else end, for break,
             Plugin 'joonty/vdebug'
             Plugin 'yssource/python.vim' " Provides some utility select, move and modify code.
@@ -704,6 +711,11 @@
 
 " Plugins settings @{
 
+    " Supertab @{
+        let g:SuperTabDefaultCompletionType = 'context'
+        let g:SuperTabContextDefaultCompletionType = '<c-n>'
+    " @}
+
     " ScratchBuffer @{
         if WINDOWS()
             let g:scratch_persistence_file = 'C:/Users/okr5kor/.vim/databases/scratch_buffer.txt'
@@ -766,7 +778,7 @@
     " @}
 
     " Clang-Format @{
-        let g:clang_format#command = 'clang-format'
+        let g:clang_format#command = 'clang-format' " Path to the executable
         let g:clang_format#code_style = 'google'
         let g:clang_format#style_options = {
                     \ 'AccessModifierOffset' : -4,
@@ -775,7 +787,7 @@
                     \ 'AlwaysBreakTemplateDeclarations' : 'true',
                     \ 'Standard' : 'C++11'}
 
-        let g:clang_format#auto_format = 1
+        let g:clang_format#auto_format = 1  " Format on save
 
         augroup pkk_augroup
             autocmd FileType c,cpp,objc ClangFormatAutoEnable
@@ -913,7 +925,7 @@
         nnoremap <F7> :VBGcontinue<CR>
 
         nnoremap <F9> :VBGevalWordUnderCursor<CR>
-        nnoremap <F8> :VBGexecute
+        nnoremap <F8> :VBGeval
         nnoremap <F6> :VBGtoggleBreakpointThisLine<CR>
     " @}
 
@@ -927,29 +939,32 @@
     " @}
 
     " PyMode @{
-        " Disable if python support not present
-        if !has('python') && !has('python3')
-            let g:pymode = 0
-        else
-            let g:pymode = 1
-        endif
+        " Disable if pymode support not present
+        if count(g:pkk_python_setting, 'pymode')
+            if !has('python') && !has('python3')
+                let g:pymode = 0
+            else
+                let g:pymode = 1
+            endif
 
-        if isdirectory(expand('~/.vim/bundle/python-mode'))
             let g:pymode_lint = 0
             let g:pymode_syntax_slow_sync = 0
+            let g:pymode_rope_regenerate_on_write = 0
+            let g:pymode_rope_autoimport = 0
+
+            " Disable if Jedi is there
+            let g:is_jedi = !count(g:pkk_python_setting, 'jedi')
+            let g:pymode_doc = g:is_jedi
+            let g:pymode_rope_completion = g:is_jedi
+            let g:pymode_rope_complete_on_dot = g:is_jedi
+            let g:pymode_rope = 1
 
             let g:pymode_motion = 1
-            let g:pymode_doc = 1
             let g:pymode_doc_bind = 'K'
             let g:pymode_run = 1
             let g:pymode_run_bind = '<leader>r'
-            let g:pymode_rope = 1
             let g:pymode_rope_show_doc_bind = '<C-c>d'
-            let g:pymode_rope_regenerate_on_write = 1
-            let g:pymode_rope_completion = 1
-            let g:pymode_rope_complete_on_dot = 1
             let g:pymode_rope_completion_bind = '<C-Space>'
-            let g:pymode_rope_autoimport = 1
             let g:pymode_rope_autoimport_bind = '<C-c>ra'
             let g:pymode_rope_goto_definition_bind = '<C-]>'
             let g:pymode_rope_goto_definition_cmd = 'new'
@@ -990,6 +1005,19 @@
         "nnoremap <leader>b Oimport ipdb; ipdb.set_trace()<Esc>
     " @}
 
+    " Jedi-vim @{
+        let g:jedi#show_call_signatures = '2'
+
+        let g:jedi#goto_command = '<leader>d'
+        let g:jedi#goto_assignments_command = '<leader>g'
+        let g:jedi#goto_definitions_command = ''
+        let g:jedi#usages_command = '<leader>su'
+
+        let g:jedi#documentation_command = 'K'
+        let g:jedi#completions_command = '<C-Space>'
+        let g:jedi#rename_command = '<leader>rn'
+    " @}
+
     " Rope-Vim @{
         let g:ropevim_vim_completion=1
         let g:ropevim_extended_complete=1
@@ -1005,7 +1033,9 @@
 
     " SnipMate @{
         " Setting the author var
-        let g:snips_author = 'Praveen Kumar K <praveenkumark1508@gmail.com>'
+        let g:snips_author = 'Praveen Kumar K'
+        let g:snips_email = 'praveenkumark1508@gmail.com'
+        let g:snips_github = 'https://github.com/praveenkumark1508'
     " @}
 
     " Ultisnips @{
@@ -1259,6 +1289,29 @@
             let g:rainbow_active = 1 "0 if you want to enable it later via :RainbowToggle
 
             nnoremap <leader>rp :RainbowToggle<CR>       " Toggle it on/off
+
+            let g:rainbow_conf = {
+                \	'guifgs': ['#005faf', 'red', '#008700', '#d75f00', 'darkred', '#808000'],
+                \	'ctermfgs': ['25', 'red', '28', '166', 'darkred', '3'],
+                \	'operators': '_,_',
+                \	'parentheses': ['start=/(/ end=/)/ fold', 'start=/\[/ end=/\]/ fold', 'start=/{/ end=/}/ fold'],
+                \	'separately': {
+                \		'*': {},
+                \		'tex': {
+                \			'parentheses': ['start=/(/ end=/)/', 'start=/\[/ end=/\]/'],
+                \		},
+                \		'lisp': {
+                \			'guifgs': ['royalblue3', 'darkorange3', 'seagreen3', 'firebrick', 'darkorchid3'],
+                \		},
+                \		'vim': {
+                \			'parentheses': ['start=/(/ end=/)/', 'start=/\[/ end=/\]/', 'start=/{/ end=/}/ fold', 'start=/(/ end=/)/ containedin=vimFuncBody', 'start=/\[/ end=/\]/ containedin=vimFuncBody', 'start=/{/ end=/}/ fold containedin=vimFuncBody'],
+                \		},
+                \		'html': {
+                \			'parentheses': ['start=/\v\<((area|base|br|col|embed|hr|img|input|keygen|link|menuitem|meta|param|source|track|wbr)[ >])@!\z([-_:a-zA-Z0-9]+)(\s+[-_:a-zA-Z0-9]+(\=("[^"]*"|'."'".'[^'."'".']*'."'".'|[^ '."'".'"><=`]*))?)*\>/ end=#</\z1># fold'],
+                \		},
+                \		'css': 0,
+                \	}
+                \}
         endif
 " @}
 
@@ -1944,8 +1997,12 @@
     if &diff
         colorscheme molokai
     else
-        colorscheme PkkPaperColor
-        set background=dark
+        if has ('nvim')
+            colorscheme PaperColor
+        else
+            colorscheme PkkPaperColor
+        endif
+        set background=light
         set cursorline
         if &background ==# 'light'
             hi CursorLine   gui=NONE cterm=NONE ctermbg=7 ctermfg=NONE
@@ -2057,7 +2114,9 @@
         if &term ==# 'xterm' || &term ==# 'screen'
             set t_Co=256            " Enable 256 colors to stop the CSApprox warning and make xterm vim shine
         endif
-        set term=screen-256color "give us 256 color schemes!
+        if !has('nvim')
+            set term=screen-256color "give us 256 color schemes!
+        endif
     endif
 
 " @}
@@ -2363,10 +2422,9 @@
 " Code Navigation and Formatting @{
 
     " Open compainion file, if it exists (e.g. test.h -> test.cpp), using Ctrl-C and Ctrl-H
-    nnoremap <C-C> :call FindCompanionFile()<CR>
-
-    " Type _style in normal mode to restyle source code
-    nnoremap _style :%!astyle<CR>
+    augroup pkk_augroup
+        autocmd FileType c,cpp  nnoremap <C-C> :call FindCompanionFile()<CR>
+    augroup end
 
     " Convert a 1-line CPP function definition signature to a declaration signature
     " Use by putting the cursor anywhere on the same line as the function signature
