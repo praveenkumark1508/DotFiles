@@ -475,7 +475,7 @@
 
     " Find Project Root Directory @{
         function! FindProjectRoot()
-            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_build', 'test', 'examples', 'certs', '.git', '.svn', 'build.xml', '.root']
+            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_build', 'test', 'certs', '.git', '.svn', 'build.xml', '.root']
             for l:indicator in l:root_indicators
                 let l:root_dir = Find_in_parent(l:indicator,GetFileDir(),$HOME)
                 if l:root_dir !=# 'Nothing'
@@ -1403,22 +1403,38 @@
                                 \}
 
                     let g:ale_linters = {
-                                \   'javascript': ['eslint'],
                                 \   'python': ['pylint', 'flake8'],
                                 \   'c': ['clang'],
                                 \   'cpp': ['clang'],
                                 \   'vim': ['vint'],
                                 \}
 
-                    let g:ale_python_flake8_options = '--max-complexity 10'
+                    let g:ale_c_clang_executable = 'clang'
+                    let g:ale_cpp_clang_executable = 'clang'
+                    augroup pkk_augroup
+                        au FileType * let g:ale_c_clang_options = printf('
+                                    \ -I /usr/src/linux-headers-4.10.0-32/arch/x86/include
+                                    \ -I /usr/src/linux-headers-4.10.0-32/include
+                                    \ -I %s
+                                    \ ', b:projectroot_dir)
+                        au FileType * let g:ale_cpp_clang_options = printf('
+                                    \ -std=c++11
+                                    \ %s
+                                    \ ', g:ale_c_clang_options)
+                    augroup END
 
-                    " Enable completion where available.
+                    let g:ale_python_pylint_executable = 'python3'
+                    let g:ale_python_pylint_options = '-m pylint'
+                    let g:ale_python_pylint_use_global = 0 " The virtualenv detection needs to be disabled.
+
+                    let g:ale_python_flake8_executable = 'python3'
+                    let g:ale_python_flake8_options = '-m flake8 --max-complexity 10 --ignore=F841'
+                    let g:ale_python_flake8_use_global = 0
+
                     let g:ale_completion_enabled = 1
 
                     let g:ale_sign_column_always = 1
-
                     let g:airline#extensions#ale#enabled = 1
-
                     let g:ale_echo_msg_error_str = 'E'
                     let g:ale_echo_msg_warning_str = 'W'
                     let g:ale_echo_msg_format = '[%linter%]: (%code%) %s [%severity%]'
@@ -1653,18 +1669,16 @@
                             \ 'AlwaysBreakTemplateDeclarations' : 'true',
                             \ 'Standard' : 'C++11'}
 
-                let g:clang_format#auto_format = 1  " Format on save
+                let g:clang_format#auto_format = 0  " Format on save
+                nmap <Leader>C :ClangFormatAutoToggle<CR> " Toggle auto formatting:
 
                 augroup pkk_augroup
-                    autocmd FileType c,cpp,objc ClangFormatAutoEnable
                     " map to <Leader>cf in C++ code
                     autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
                     autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
                     " if you install vim-operator-user
                     autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
                 augroup END
-                " Toggle auto formatting:
-                nmap <Leader>C :ClangFormatAutoToggle<CR>
             " @}
             " Clang-Complete @{
                 " path to directory where library can be found
@@ -1681,7 +1695,6 @@
         " @}@}
         " Python @{
             " PyMode @{
-                " Disable if pymode support not present
                 if count(g:pkk_python_setting, 'pymode')
                     if !has('python') && !has('python3')
                         let g:pymode = 0
@@ -1693,6 +1706,7 @@
                     let g:pymode_syntax_slow_sync = 0
                     let g:pymode_rope_regenerate_on_write = 0
                     let g:pymode_rope_autoimport = 0
+                    let g:pymode_folding = 0
 
                     " Disable if Jedi is there
                     let g:is_jedi = !count(g:pkk_python_setting, 'jedi')
@@ -1721,6 +1735,7 @@
                     let g:pymode_rope_change_signature_bind = '<C-c>rs'
                     let g:pymode_syntax = 1
                     let g:pymode_syntax_all = 1
+                    let g:pymode_indent = 1
 
                     let g:pymode_trim_whitespaces = 1
                     let g:pymode_options = 0
@@ -1733,9 +1748,6 @@
                     "Setup pymode |quickfix| window
                     let g:pymode_quickfix_minheight = 3
                     let g:pymode_quickfix_maxheight = 6
-
-                    let g:pymode_indent = 1
-                    let g:pymode_folding = 0
 
                     "Enable breakpoint
                     let g:pymode_breakpoint = 1
