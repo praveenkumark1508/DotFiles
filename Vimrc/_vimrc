@@ -18,10 +18,8 @@
     " @}
 
     " Basics @{
-        set nocompatible        " Must be first line
-        if !WINDOWS()
-            set shell=/bin/sh
-        endif
+        let g:mapleader = ' '
+        let g:maplocalleader = '_'
     " @}
 
     " Windows Compatible @{
@@ -53,6 +51,7 @@
     " @}
 
     " Setup Bundle Support @{
+        set nocompatible        " Must be first line
         " The next three lines ensure that the ~/.vim/bundle/ system works
         filetype off
         set runtimepath+=~/.vim/bundle/vundle
@@ -69,11 +68,6 @@
     \ call UnBundle(<args>)
     " @}
 
-    " Leader and Local Leader @{
-        let g:mapleader = ' '
-        let g:maplocalleader = '_'
-    " @}
-
     " Detecting Filetypes @{
         augroup pkk_augroup
             autocmd!
@@ -82,6 +76,11 @@
 
             au! BufNewFile,BufRead *.arxml setf xml
             au! BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
+            
+            " automatically detect messages.log files and highlight them
+            au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
+            au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
+            au BufNewfile,BufRead syslog* set filetype=messages
         augroup END
     " @}
 
@@ -475,7 +474,7 @@
 
     " Find Project Root Directory @{
         function! FindProjectRoot()
-            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_build', 'test', 'certs', '.git', '.svn', 'build.xml', '.root']
+            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_builds', 'build.xml', 'readme.md', '.git', '.svn', 'certs', '.root', 'test']
             for l:indicator in l:root_indicators
                 let l:root_dir = Find_in_parent(l:indicator,GetFileDir(),$HOME)
                 if l:root_dir !=# 'Nothing'
@@ -542,7 +541,7 @@
                         \ l:command
         endfunc
 
-        noremap <leader>cdb :call CscopeUpdate(b:projectroot_dir, "cscope.out")<cr>
+        noremap <leader>cdb :call CscopeUpdate(b:projectroot_dir, 'cscope.out')<cr>
     " @}
 
     " Toggle background @{
@@ -854,11 +853,18 @@
         " @}
         " AsyncRun @{
             let g:asyncrun_rootmarks = ['cscope.out', '.project', '.root', 'build.xml', 'generatedFiles', '_build']
-            nnoremap <leader>cpl :AsyncRun <C-R>=b:projectroot_dir . "/build_A2"<cr><cr>
             augroup asyncrun_settings_au
                 autocmd!
                 autocmd User AsyncRunStart call asyncrun#quickfix_toggle(8, 1)
             augroup END
+            
+            " NRCS2 project specific
+            nnoremap <leader>bs :!start cmd /c cd <C-R>=b:projectroot_dir<CR> && C:/Users/okr5kor/Documents/My_Scripts/build_Premium_A2.bat && python3 C:/Users/okr5kor/Documents/My_Scripts/CopySandboxToTestPC.py<CR>
+            nnoremap <leader>bl :!start cmd /c <C-R>=b:projectroot_dir . '/generatedFiles/build_log/cpj_dai_nrc2_d3/int_d3/Premium_A2_build_log.htm'<CR><CR>
+            " nnoremap <leader>bs :exec "AsyncRun ".
+            "             \ '-cwd='.fnameescape(b:projectroot_dir).' '.
+            "             \ 'C:/Users/okr5kor/Documents/My_Scripts/build_Premium_A2.bat && python3 C:/Users/okr5kor/Documents/My_Scripts/CopySandboxToTestPC.py'<CR>
+            " nnoremap <leader>bl :AsyncRun <C-R>=b:projectroot_dir . "/generatedFiles/build_log/cpj_dai_nrc2_d3/int_d3/Premium_A2_build_log.htm"<cr><cr>
         " @}
         " ctrlp @{
             if isdirectory(expand('~/.vim/bundle/ctrlp.vim/'))
@@ -1416,7 +1422,13 @@
                                     \ -I /usr/src/linux-headers-4.10.0-32/arch/x86/include
                                     \ -I /usr/src/linux-headers-4.10.0-32/include
                                     \ -I %s
-                                    \ ', b:projectroot_dir)
+                                    \ -I %s/generatedFiles/Premium_A2/include
+                                    \ -I %s/generatedFiles/Premium_A2/private_include
+                                    \ -I %s/generatedFiles/Premium_A2/domain_inc/cubas
+                                    \ -I %s/generatedFiles/Premium_A2/domain_inc/evm
+                                    \ -I %s/generatedFiles/Premium_A2/domain_inc/pdm
+                                    \ ', b:projectroot_dir, b:projectroot_dir, b:projectroot_dir, b:projectroot_dir, b:projectroot_dir, b:projectroot_dir)
+
                         au FileType * let g:ale_cpp_clang_options = printf('
                                     \ -std=c++11
                                     \ %s
@@ -1540,8 +1552,8 @@
             " @}
             " Ultisnips @{
                 let g:UltiSnipsExpandTrigger='<tab>'
-                let g:UltiSnipsJumpForwardTrigger='<tab>'
-                let g:UltiSnipsJumpBackwardTrigger='<s-tab>'
+                " let g:UltiSnipsJumpForwardTrigger='<tab>'
+                " let g:UltiSnipsJumpBackwardTrigger='<s-tab>'
                 let g:UltiSnipsSnippetDirectories = ['~/.vim/UltiSnips', 'UltiSnips']
             " @}
             " indent_guides @{
@@ -1658,23 +1670,33 @@
                 nmap <C-@><C-@>f :vert scs find f <C-R>=expand("<cfile>")<CR><CR>
                 nmap <C-@><C-@>i :vert scs find i <C-R>=expand("<cfile>")<CR><CR>
                 nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
+
+                au BufEnter *.cpp,*.hpp,*.h,*.py,*.pyw      call Cycle_csdb()
             " @}
             " Clang-Format @{
                 let g:clang_format#command = 'clang-format' " Path to the executable
                 let g:clang_format#code_style = 'google'
                 let g:clang_format#style_options = {
-                            \ 'AccessModifierOffset' : -4,
+                            \ 'AccessModifierOffset' : 0,
+                            \ 'AlignConsecutiveAssignments': 'true',
                             \ 'AllowShortFunctionsOnASingleLine': 'false',
                             \ 'AllowShortIfStatementsOnASingleLine' : 'false',
-                            \ 'AlwaysBreakTemplateDeclarations' : 'true',
-                            \ 'Standard' : 'C++11'}
+                            \ 'AllowShortLoopsOnASingleLine': 'false',
+                            \ 'BreakBeforeBraces': 'Allman',
+                            \ 'ColumnLimit' : 120,
+                            \ 'IndentWidth': 4,
+                            \ 'IndentPPDirectives': 'AfterHash',
+                            \ 'NamespaceIndentation': 'All',
+                            \ 'Standard' : 'C++11',
+                            \ 'TabWidth': 4,
+                            \ }
 
                 let g:clang_format#auto_format = 0  " Format on save
                 nmap <Leader>C :ClangFormatAutoToggle<CR> " Toggle auto formatting:
 
                 augroup pkk_augroup
                     " map to <Leader>cf in C++ code
-                    autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR>
+                    autocmd FileType c,cpp,objc nnoremap <buffer><Leader>cf :<C-u>ClangFormat<CR> Go<esc>
                     autocmd FileType c,cpp,objc vnoremap <buffer><Leader>cf :ClangFormat<CR>
                     " if you install vim-operator-user
                     autocmd FileType c,cpp,objc map <buffer><Leader>x <Plug>(operator-clang-format)
@@ -1682,7 +1704,11 @@
             " @}
             " Clang-Complete @{
                 " path to directory where library can be found
-                let g:clang_library_path='/usr/lib/llvm-5.0/lib/libclang-5.0.so.1' " Path to libclang.so.5.0
+                if LINUX()
+                    let g:clang_library_path='/usr/lib/llvm-5.0/lib/libclang-5.0.so.1' " Path to libclang.so.5.0
+                else
+                    let g:clang_library_path = 'C:/Program Files/LLVM/bin/libclang.dll'
+                endif
             " @}
             " VimFold4C @{
                 let g:fold_options = {
@@ -1850,6 +1876,17 @@
     set lazyredraw  " for performance
     set matchtime=3  " Time to show matching paranthesis
     set title " Set title to window
+    
+    if WINDOWS()
+        set shell=cmd.exe
+    elseif
+        set shell=/bin/sh
+    endif
+    set noshellslash
+    " set shellxescape="\"&|<>()@^"
+    " set shelltype=4
+    " set shellxquote='\"'
+    " set shellquote=''
 
     " enable matchit plugin which extends usage of % operator to match
     " more words ex. if/end def/end html tags etc.
@@ -1982,9 +2019,9 @@
         set background=light
         set cursorline
         if &background ==# 'light'
-            hi CursorLine   gui=NONE cterm=NONE ctermbg=7 ctermfg=NONE
+            hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
         else
-            hi CursorLine   gui=NONE cterm=NONE ctermbg=237 ctermfg=NONE
+            hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
         endif
         "hi CursorLine gui=underline cterm=underline
         "hi CursorLine   cterm=NONE ctermbg=8 guibg=#555555 ctermfg=NONE   " Highlight current line
@@ -2069,16 +2106,22 @@
     if has('gui_running')
         if !exists('g:pkk_no_big_font')
             if LINUX()
-                set guifont=Source\ Code\ Pro\ for\ Powerline\ Regular\ 10,Andale\ Mono\ Regular\ 10,Menlo\ Regular\ 11,Consolas\ Regular\ 12,Courier\ New\ Regular\ 14
+                set guifont=Source\ Code\ Pro\ for\ Powerline\ Regular\ 10,
+                            \Andale\ Mono\ Regular\ 10,
+                            \Menlo\ Regular\ 11,Consolas\ Regular\ 12,
+                            \Courier\ New\ Regular\ 14
             elseif OSX()
-                set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,Consolas\ Regular:h12,Courier\ New\ Regular:h14
+                set guifont=Andale\ Mono\ Regular:h12,Menlo\ Regular:h11,
+                            \Consolas\ Regular:h12,Courier\ New\ Regular:h14
             elseif WINDOWS()
-                set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,Andale_Mono:h10,Menlo:h10,Consolas:h10.2,Courier_New:h10
+                set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,
+                            \Andale_Mono:h10,Menlo:h10,Consolas:h10.2,
+                            \Courier_New:h10
             endif
         endif
 
         set guioptions-=T           " Remove the toolbar
-        set guioptions-=m           " Remove the menubar
+        " set guioptions-=m           " Remove the menubar
 
         if WINDOWS()
             augroup pkk_augroup
@@ -2116,11 +2159,12 @@
 
     "highlight ColorColumn ctermbg=red      " set a visible line at 80 char
     "call matchadd('ColorColumn', '\%81v', 100)
-    set textwidth=79 colorcolumn=+1
 
     " au command for each filetypes
     "autocmd FileType go autocmd BufWritePre <buffer> Fmt
     augroup pkk_augroup
+        au FileType c,cpp,h,hpp,vim set textwidth=119 colorcolumn=+1
+        au FileType python set textwidth=79 colorcolumn=+1
         autocmd FileType haskell,puppet,ruby,yml,html,xml,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
 
         " Workaround vim-commentary for Haskell
@@ -2136,11 +2180,6 @@
 
     " replaces selected text with test from buffer
     vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>`]
-
-    " automatically detect messages.log files and highlight them
-    au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
-    au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
-    au BufNewfile,BufRead syslog* set filetype=messages
 
 " @}
 
@@ -2190,9 +2229,18 @@
     if executable('ag')
         nnoremap <leader>ag :AsyncRun ag --vimgrep <cword> % <CR>
         nnoremap <leader>agg :AsyncRun ag --vimgrep <cword> <C-R>=b:projectroot_dir<CR><CR>
+    elseif executable('findstr')
+        nnoremap <leader>ag :AsyncRun findstr /s /n /i /p <cword> % <CR>
+        nnoremap <leader>agg :AsyncRun findstr /s /n /i /p <cword> <C-R>=b:projectroot_dir . "/*.cpp"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.c"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.h"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.hpp"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.inl"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.pyw"<CR>
+                    \ <C-R>=b:projectroot_dir . "/*.py"<CR><CR>
     else
-        nnoremap <leader>agg  :AsyncRun grep -n -R --include=*.c --include=*.cpp --include=*.h --include=*.py --include=*.pyw <cword> <C-R>=b:projectroot_dir<CR><CR>
         nnoremap <leader>ag  :AsyncRun grep -nH <cword> % <CR>
+        nnoremap <leader>agg  :AsyncRun grep -nH -r --include=*.c --include=*.cpp --include=*.h --include=*.py --include=*.pyw <cword> <C-R>=b:projectroot_dir<CR><CR>
     endif
 
     " Sorrounding a word with ", ', (, [, {, `  @{
