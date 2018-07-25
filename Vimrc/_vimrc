@@ -1042,22 +1042,6 @@
 
     " Programming @{
         " General @{
-            " Fugitive @{
-                if isdirectory(expand('~/.vim/bundle/vim-fugitive/'))
-                    nnoremap <silent> <leader>gs :Gstatus<CR>
-                    nnoremap <silent> <leader>gd :Gdiff<CR>
-                    nnoremap <silent> <leader>gc :Gcommit<CR>
-                    nnoremap <silent> <leader>gb :Gblame<CR>
-                    nnoremap <silent> <leader>gl :Glog<CR>
-                    nnoremap <silent> <leader>gp :Git push<CR>
-                    nnoremap <silent> <leader>gr :Gread<CR>
-                    nnoremap <silent> <leader>gw :Gwrite<CR>
-                    nnoremap <silent> <leader>ge :Gedit<CR>
-                    " Mnemonic _i_nteractive
-                    nnoremap <silent> <leader>gi :Git add -p %<CR>
-                    nnoremap <silent> <leader>gg :SignifyToggle<CR>
-                endif
-            "@}
             " YouCompleteMe @{
                 if count(g:pkk_bundle_groups, 'youcompleteme')
                     let g:acp_enableAtStartup = 0
@@ -1393,6 +1377,7 @@
                     set completeopt=menu,preview,longest
                 endif
             " @}
+
             " ALE @{
                 if g:pkk_syntax_checker ==# 'ale'
                     let g:ale_fixers = {
@@ -1517,21 +1502,7 @@
                     endfunction
                 endif
             " @}
-            " VDebugger @{
-                augroup pkk_augroup
-                    au FileType python nnoremap <F5> :VBGstartPDB3 % <CR>
-                    au FileType c,cpp nnoremap <F5> :VBGstartGDB a.out<CR>
-                augroup END
 
-                nnoremap <F2> :VBGstepIn<CR>
-                nnoremap <F3> :VBGstepOver<CR>
-                nnoremap <F4> :VBGstepOut<CR>
-                nnoremap <F7> :VBGcontinue<CR>
-
-                nnoremap <F9> :VBGevalWordUnderCursor<CR>
-                nnoremap <F8> :VBGeval
-                nnoremap <F6> :VBGtoggleBreakpointThisLine<CR>
-            " @}
             " Snippets @{
                 " Setting the author var
                 let g:snips_author = 'Praveen Kumar K'
@@ -1544,6 +1515,39 @@
                 let g:UltiSnipsJumpBackwardTrigger='<s-tab>'
                 let g:UltiSnipsSnippetDirectories = ['~/.vim/UltiSnips', 'UltiSnips']
             " @}
+
+            " VDebugger @{
+                augroup pkk_augroup
+                    au FileType python nnoremap <F5> :VBGstartPDB3 % <CR>
+                    au FileType c,cpp nnoremap <F5> :VBGstartGDB a.out<CR>
+                augroup END
+
+                nnoremap <F2> :VBGstepIn<CR>
+                nnoremap <F3> :VBGstepOver<CR>
+                nnoremap <F4> :VBGstepOut<CR>
+
+                nnoremap <F6> :VBGtoggleBreakpointThisLine<CR>
+                nnoremap <F7> :VBGcontinue<CR>
+
+                nnoremap <F9> :VBGeval
+                nnoremap <F10> :VBGevalWordUnderCursor<CR>
+            " @}
+            " Fugitive @{
+                if isdirectory(expand('~/.vim/bundle/vim-fugitive/'))
+                    nnoremap <silent> <leader>gs :Gstatus<CR>
+                    nnoremap <silent> <leader>gd :Gdiff<CR>
+                    nnoremap <silent> <leader>gc :Gcommit<CR>
+                    nnoremap <silent> <leader>gb :Gblame<CR>
+                    nnoremap <silent> <leader>gl :Glog<CR>
+                    nnoremap <silent> <leader>gp :Git push<CR>
+                    nnoremap <silent> <leader>gr :Gread<CR>
+                    nnoremap <silent> <leader>gw :Gwrite<CR>
+                    nnoremap <silent> <leader>ge :Gedit<CR>
+                    " Mnemonic _i_nteractive
+                    nnoremap <silent> <leader>gi :Git add -p %<CR>
+                    nnoremap <silent> <leader>gg :SignifyToggle<CR>
+                endif
+            "@}
             " indent_guides @{
                 if isdirectory(expand('~/.vim/bundle/vim-indent-guides/'))
                     let g:indent_guides_enable_on_vim_startup = 1
