@@ -76,7 +76,7 @@
 
             au! BufNewFile,BufRead *.arxml setf xml
             au! BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
-            
+
             " automatically detect messages.log files and highlight them
             au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
             au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
@@ -857,7 +857,7 @@
                 autocmd!
                 autocmd User AsyncRunStart call asyncrun#quickfix_toggle(8, 1)
             augroup END
-            
+
             " NRCS2 project specific
             nnoremap <leader>bs :!start cmd /c cd <C-R>=b:projectroot_dir<CR> && C:/Users/okr5kor/Documents/My_Scripts/build_Premium_A2.bat && python3 C:/Users/okr5kor/Documents/My_Scripts/CopySandboxToTestPC.py<CR>
             nnoremap <leader>bl :!start cmd /c <C-R>=b:projectroot_dir . '/generatedFiles/build_log/cpj_dai_nrc2_d3/int_d3/Premium_A2_build_log.htm'<CR><CR>
@@ -1880,10 +1880,10 @@
     set lazyredraw  " for performance
     set matchtime=3  " Time to show matching paranthesis
     set title " Set title to window
-    
+
     if WINDOWS()
         set shell=cmd.exe
-    elseif
+    else
         set shell=/bin/sh
     endif
     set noshellslash
