@@ -1,4 +1,4 @@
-" vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker=@{,@} foldlevel=0 foldmethod=marker:
+﻿" vim: set sw=4 ts=4 sts=4 et tw=78 foldmarker=@{,@} foldlevel=0 foldmethod=marker:
 
 " NOTE: EXECUTABLE DEPENDENCY
 " ctags, cscope, find, [ag or ack-grep or ack], python3
@@ -2119,7 +2119,7 @@
                             \Consolas\ Regular:h12,Courier\ New\ Regular:h14
             elseif WINDOWS()
                 set guifont=DejaVu_Sans_Mono_for_Powerline:h10:cANSI:qDRAFT,
-                            \Andale_Mono:h10,Menlo:h10,Consolas:h10.2,
+                            \Consolas_NF:h10,Menlo:h10,Consolas:h10.2,
                             \Courier_New:h10
             endif
         endif
@@ -2230,22 +2230,37 @@
 
     " ack and silversearcher-ag
     " nmap  <leader>ag :exe "Ack " expand('<cword>') <CR>
-    if executable('ag')
-        nnoremap <leader>ag :AsyncRun ag --vimgrep <cword> % <CR>
-        nnoremap <leader>agg :AsyncRun ag --vimgrep <cword> <C-R>=b:projectroot_dir<CR><CR>
-    elseif executable('findstr')
-        nnoremap <leader>ag :AsyncRun findstr /s /n /i /p <cword> % <CR>
-        nnoremap <leader>agg :AsyncRun findstr /s /n /i /p <cword> <C-R>=b:projectroot_dir . "/*.cpp"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.c"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.h"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.hpp"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.inl"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.pyw"<CR>
-                    \ <C-R>=b:projectroot_dir . "/*.py"<CR><CR>
-    else
-        nnoremap <leader>ag  :AsyncRun grep -nH <cword> % <CR>
-        nnoremap <leader>agg  :AsyncRun grep -nH -r --include=*.c --include=*.cpp --include=*.h --include=*.py --include=*.pyw <cword> <C-R>=b:projectroot_dir<CR><CR>
-    endif
+    func! Search_file(word)
+        if executable('ag')
+            execute 'AsyncRun ag --vimgrep ' . a:word . ' %'
+        elseif executable('findstr')
+            execute 'AsyncRun findstr /s /n /i /p ' . a:word . ' %'
+        else
+            execute 'AsyncRun grep -nH ' . a:word . ' %'
+        endif
+    endfunc
+
+    func! Search_sandbox(word)
+        if executable('ag')
+            execute 'AsyncRun ag --vimgrep ' . a:word . ' ' . b:projectroot_dir
+        elseif executable('findstr')
+            execute 'AsyncRun findstr /s /n /i /p ' . a:word . ' ' . b:projectroot_dir . "/*.cpp"
+                        \ . ' ' . b:projectroot_dir . "/*.c"
+                        \ . ' ' . b:projectroot_dir . "/*.h"
+                        \ . ' ' . b:projectroot_dir . "/*.hpp"
+                        \ . ' ' . b:projectroot_dir . "/*.inl"
+                        \ . ' ' . b:projectroot_dir . "/*.pyw"
+                        \ . ' ' . b:projectroot_dir . "/*.py"
+        else
+            execute 'AsyncRun grep -nH -r --include=*.c --include=*.cpp --include=*.h --include=*.py --include=*.pyw ' . a:word . ' ' . b:projectroot_dir
+        endif
+    endfunc
+
+    command! -complete=file -nargs=+ Ag call Search_file(<q-args>)
+    command! -complete=file -nargs=+ Agg call Search_sandbox(<q-args>)
+
+    nnoremap <leader>ag :Ag <cword><CR>
+    nnoremap <leader>agg :Agg <cword><CR>
 
     " Sorrounding a word with ", ', (, [, {, `  @{
         " ," Surround a word with "quotes"
@@ -2472,6 +2487,15 @@
         endfor
     endfunction
     noremap <silent> W :call NextWord()<CR>
+
+    augroup pkk_augroup
+        if WINDOWS()
+            autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o %< && ./%<"<CR>
+            autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o %< && ./%<"<CR>
+            " autocmd FileType c,cpp nnoremap <leader>r :Shell bash -c "./%<"<CR>
+        endif
+    augroup end
+
 
 " @}
 
