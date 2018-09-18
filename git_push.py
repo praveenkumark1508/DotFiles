@@ -74,17 +74,17 @@ def load_timestamp(pickle_filename):
 def create_zip(zipfile_name, folder):
     '''Function to create zipfile splitted to 40MB size'''
     logging.info("Creating zipfile of %s", folder)
-    call("zip -r {}.zip {} --out temp.zip".format(zipfile_name, folder),
+    call('bash -c "zip -r {}.zip {} --out temp.zip"'.format(zipfile_name, folder),
          shell=True)
 
     logging.info("Deleting old zip file")
-    call("rm -f {}.z*".format(zipfile_name), shell=True)
+    call('bash -c "rm -f {}.z*"'.format(zipfile_name), shell=True)
 
     logging.info("Renaming the zipfiles")
     for i in range(15):
-        call("mv temp.z{:02d} {}.z{:02d} 2> /dev/null".format(
+        call('bash -c "mv temp.z{:02d} {}.z{:02d} 2> /dev/null"'.format(
             i, zipfile_name, i), shell=True)
-    call('mv temp.zip {}.zip'.format(zipfile_name), shell=True)
+    call('bash "mv temp.zip {}.zip"'.format(zipfile_name), shell=True)
 
 
 if __name__ == '__main__':
@@ -114,7 +114,7 @@ if __name__ == '__main__':
 
     # Committing and pushing in git
     logging.info("Committing and pushing in git")
-    call("git add *", shell=True)
-    call('git commit -m "{}"'.format(COMMIT_MSG), shell=True)
-    call('git push', shell=True)
+    #  call("git add *", shell=True)
+    #  call('git commit -m "{}"'.format(COMMIT_MSG), shell=True)
+    #  call('git push', shell=True)
     print("Git push done")
