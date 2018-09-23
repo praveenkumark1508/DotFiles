@@ -180,6 +180,7 @@
     " General @{
         if count(g:pkk_bundle_groups, 'general')
             " Plugin 'tpope/vim-dispatch'             " run tasks in background
+            Plugin 'amoffat/snake'              " Write vim plugins in python
             Plugin 'skywind3000/asyncrun.vim'             " run tasks in background
 
             Bundle 'ctrlpvim/ctrlp.vim'
@@ -313,7 +314,7 @@
                 Plugin 'rhysd/vim-clang-format'
                 Plugin 'hari-rangarajan/CCTree'
                 Plugin 'Rip-Rip/clang_complete'
-                Plugin 'LucHermitte/VimFold4C'
+                " Plugin 'LucHermitte/VimFold4C'
                 "Plugin 'c.vim'                 " C - language support
             endif
         " @}
@@ -1406,6 +1407,7 @@
                         au FileType * let g:ale_c_clang_options = printf('
                                     \ -I /usr/src/linux-headers-4.10.0-32/arch/x86/include
                                     \ -I /usr/src/linux-headers-4.10.0-32/include
+                                    \ -I C:\\Program\ Files\ \(x86\)\\Windows\ Kits\\10\\Include\\10.0.17134.0\\ucrt
                                     \ -I %s
                                     \ -I %s/generatedFiles/Premium_A2/include
                                     \ -I %s/generatedFiles/Premium_A2/private_include
@@ -1616,7 +1618,7 @@
                 endif
             " @}
         " @}
-        " C/CPP @{@{
+        " C/CPP @{
             " Ctags @{
                 set tags=./tags;/,~/.vimtags
 
@@ -1711,7 +1713,7 @@
                 if LINUX()
                     let g:clang_library_path='/usr/lib/llvm-5.0/lib/libclang-5.0.so.1' " Path to libclang.so.5.0
                 else
-                    let g:clang_library_path = 'C:/Program Files/LLVM/bin/libclang.dll'
+                    let g:clang_library_path = 'C:/Program Files/LLVM/bin'
                 endif
             " @}
             " VimFold4C @{
@@ -1722,7 +1724,7 @@
                             \ 'max_foldline_length': 'win'
                             \ }
             " @}
-        " @}@}
+        " @}
         " Python @{
             " PyMode @{
                 if count(g:pkk_python_setting, 'pymode')
@@ -2191,7 +2193,7 @@
 
     let g:xml_syntax_folding = 1
     augroup pkk_augroup
-        au FileType xml setlocal foldmethod=syntax foldlevel=0
+        au FileType xml,c,cpp setlocal foldmethod=syntax foldlevel=0
     augroup END
 
     " setup environment for C and CPP
@@ -2208,8 +2210,6 @@
     " TAB and Shift-TAB in normal mode cycle buffers
     nmap <Tab> :bn<CR>
     nmap <S-Tab> :bp<CR>
-
-    nnoremap <S-C> cc<ESC>k  " Clear the line
 
     " VIM-signature plugin
     nnoremap <leader>sm :SignatureToggleSigns<cr>
@@ -2326,7 +2326,7 @@
 
     " The default mappings for editing and applying the pkk configuration
     " are <leader>ev and <leader>sv respectively.
-    noremap <leader>ev :tabedit ~/_vimrc<CR>
+    noremap <leader>ev :tabedit ~/_vimrc<CR>:tabedit ~/.vimrc.py<CR>
     noremap <leader>sv :source ~/_vimrc<CR>
 
     " Easier moving in tabs and windows
@@ -2549,4 +2549,8 @@
     command! Sudowrite w !sudo tee % > /dev/null
 
 " @}
+
+if filereadable(expand("~/.vim/bundle/snake/plugin/snake.vim"))
+    source ~/.vim/bundle/snake/plugin/snake.vim
+endif
 

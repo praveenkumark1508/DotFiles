@@ -74,7 +74,7 @@ def load_timestamp(pickle_filename):
 def create_zip(zipfile_name, folder):
     '''Function to create zipfile splitted to 40MB size'''
     logging.info("Creating zipfile of %s", folder)
-    call("zip -r {}.zip {} --out temp.zip".format(zipfile_name, folder),
+    call("zip -r --quiet {}.zip {} --out temp.zip".format(zipfile_name, folder),
          shell=True)
 
     logging.info("Deleting old zip file")
