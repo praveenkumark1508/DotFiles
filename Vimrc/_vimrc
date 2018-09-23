@@ -3,89 +3,6 @@
 " NOTE: EXECUTABLE DEPENDENCY
 " ctags, cscope, find, [ag or ack-grep or ack], python3
 
-" Environment @{
-
-    " Identify platform @{
-        silent function! OSX()
-            return has('macunix')
-        endfunction
-        silent function! LINUX()
-            return has('unix') && !has('macunix') && !has('win32unix')
-        endfunction
-        silent function! WINDOWS()
-            return  (has('win32') || has('win64'))
-        endfunction
-    " @}
-
-    " Basics @{
-        let g:mapleader = ' '
-        let g:maplocalleader = '_'
-    " @}
-
-    " Windows Compatible @{
-        " On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization
-        " across (heterogeneous) systems easier.
-        if has('win32') || has('win64')
-          set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/.vim/after
-
-          " Be nice and check for multi_byte even if the config requires
-          " multi_byte support most of the time
-          if has('multi_byte')
-            " Windows cmd.exe still uses cp850. If Windows ever moved to
-            " Powershell as the primary terminal, this would be utf-8
-            set termencoding=cp850
-            setglobal fileencoding=utf-8
-            " Windows has traditionally used cp1252, so it's probably wise to
-            " fallback into cp1252 instead of eg. iso-8859-15.
-            " Newer Windows files might contain utf-8 or utf-16 LE so we might
-            " want to try them first.
-            set fileencodings=ucs-bom,utf-8,utf-16le,cp1252,iso-8859-15
-          endif
-        endif
-    " @}
-
-    " Arrow Key Fix @{
-        if &term[:4] ==# 'xterm' || &term[:5] ==# 'screen' || &term[:3] ==# 'rxvt'
-            inoremap <silent> <C-[>OC <RIGHT>
-        endif
-    " @}
-
-    " Setup Bundle Support @{
-        set nocompatible        " Must be first line
-        " The next three lines ensure that the ~/.vim/bundle/ system works
-        filetype off
-        set runtimepath+=~/.vim/bundle/vundle
-        call vundle#rc()
-    " @}
-
-    " Add an UnBundle command @{
-    function! UnBundle(arg, ...)
-      let l:bundle = vundle#config#init_bundle(a:arg, a:000)
-      call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
-    endfunction
-
-    com! -nargs=+         UnBundle
-    \ call UnBundle(<args>)
-    " @}
-
-    " Detecting Filetypes @{
-        augroup pkk_augroup
-            autocmd!
-            autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
-            autocmd BufNewFile,BufRead *.coffee set filetype=coffee
-
-            au! BufNewFile,BufRead *.arxml setf xml
-            au! BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
-
-            " automatically detect messages.log files and highlight them
-            au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
-            au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
-            au BufNewfile,BufRead syslog* set filetype=messages
-        augroup END
-    " @}
-
-" @}
-
 " options @{
 
     " Python develop environment setting
@@ -153,6 +70,226 @@
     "   let g:multi_cursor_quit_key='<Esc>'
     " Require a special keypress to enter multiple cursors mode
     "   let g:multi_cursor_start_key='+'
+
+" @}
+
+" Basics @{
+
+    " Identify platform @{
+        silent function! OSX()
+            return has('macunix')
+        endfunction
+        silent function! LINUX()
+            return has('unix') && !has('macunix') && !has('win32unix')
+        endfunction
+        silent function! WINDOWS()
+            return  (has('win32') || has('win64'))
+        endfunction
+    " @}
+
+    " Set leader @{
+        let g:mapleader = ' '
+        let g:maplocalleader = '_'
+    " @}
+
+    " Windows Compatible @{
+        " On Windows, also use '.vim' instead of 'vimfiles'; this makes synchronization
+        " across (heterogeneous) systems easier.
+        if has('win32') || has('win64')
+          set runtimepath=$HOME/.vim,$VIM/vimfiles,$VIMRUNTIME,$VIM/vimfiles/after,$HOME/.vim/after
+
+          " Be nice and check for multi_byte even if the config requires
+          " multi_byte support most of the time
+          if has('multi_byte')
+            " Windows cmd.exe still uses cp850. If Windows ever moved to
+            " Powershell as the primary terminal, this would be utf-8
+            set termencoding=cp850
+            setglobal fileencoding=utf-8
+            " Windows has traditionally used cp1252, so it's probably wise to
+            " fallback into cp1252 instead of eg. iso-8859-15.
+            " Newer Windows files might contain utf-8 or utf-16 LE so we might
+            " want to try them first.
+            set fileencodings=ucs-bom,utf-8,utf-16le,cp1252,iso-8859-15
+          endif
+        endif
+    " @}
+
+    " Arrow Key Fix @{
+        if &term[:4] ==# 'xterm' || &term[:5] ==# 'screen' || &term[:3] ==# 'rxvt'
+            inoremap <silent> <C-[>OC <RIGHT>
+        endif
+    " @}
+
+    " Setup Bundle Support @{
+        set nocompatible        " Must be first line
+        " The next three lines ensure that the ~/.vim/bundle/ system works
+        filetype off
+        set runtimepath+=~/.vim/bundle/vundle
+        call vundle#rc()
+    " @}
+
+    " Add an UnBundle command @{
+    function! UnBundle(arg, ...)
+      let l:bundle = vundle#config#init_bundle(a:arg, a:000)
+      call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
+    endfunction
+
+    command! -nargs=+ UnBundle call UnBundle(<args>)
+    " @}
+
+    " Detecting Filetypes @{
+        augroup pkk_augroup
+            autocmd!
+            autocmd BufNewFile,BufRead *.html.twig set filetype=html.twig
+            autocmd BufNewFile,BufRead *.coffee set filetype=coffee
+
+            au! BufNewFile,BufRead *.arxml setf xml
+            au! BufRead,BufNewFile *.txtfmt    setfiletype txtfmt
+
+            " automatically detect messages.log files and highlight them
+            au BufNewfile,BufRead messages* set filetype=dtv_logs_highlights
+            au BufNewfile,BufRead logsense*[^py] set filetype=dtv_logs_highlights
+            au BufNewfile,BufRead syslog* set filetype=messages
+        augroup END
+    " @}
+
+    " Find project root directory @{
+        "  Gets the directory for the file in the current window
+        "  Or the current working dir if there isn't one for the window.
+        "  Use tr to allow that other OS paths, too
+        function! GetFileDir()
+            if winbufnr(0) == -1
+                let l:unislash = getcwd()
+            else
+                let l:unislash = fnamemodify(bufname(winbufnr(0)), ':p:h')
+            endif
+                return tr(l:unislash, '\', '/')
+        endfunc
+
+        " Starting with the current working dir, it walks up the parent folders
+        " until it finds the file, or it hits the stop dir.
+        " If it doesn't find it, it returns "Nothing"
+        function! Find_in_parent(f_name, start_dir, stop_dir)
+            let l:here = a:start_dir
+            while ( strlen( l:here) > 0 )
+                if filereadable( l:here . '/' . a:f_name ) || isdirectory(( l:here . '/' . a:f_name ))
+                return l:here
+                endif
+                let l:fr = match(l:here, '/[^/]*$')
+                if l:fr == -1
+                break
+                endif
+                let l:here = strpart(l:here, 0, l:fr)
+                if l:here == a:stop_dir
+                break
+                endif
+            endwhile
+            return 'Nothing'
+        endfunc
+
+        function! FindProjectRoot()
+            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_builds', 'build.xml', 'readme.md', '.git', '.svn', 'certs', '.root', 'test']
+            for l:indicator in l:root_indicators
+                let l:root_dir = Find_in_parent(l:indicator,GetFileDir(),$HOME)
+                if l:root_dir !=# 'Nothing'
+                    return l:root_dir
+                endif
+            endfor
+            return GetFileDir()
+        endfunc
+        augroup pkk_augroup
+            autocmd FileType * let b:projectroot_dir = FindProjectRoot()
+        augroup END
+    " @}
+
+    " Function to display folded text @{
+        function! NeatFoldText()
+            let l:indent = repeat(' ', indent(v:foldstart))
+            let l:line2 = ''
+            if &filetype ==# 'xml'
+                let l:temp = substitute(getline(v:foldstart + 1), '\s\+', '', 'g')
+                if strpart(l:temp, 1, 10) ==# 'SHORT-NAME'
+                    let l:line2 = '-> ' . substitute(l:temp, '<[^>]*>', '', 'g') . ' '
+                endif
+            endif
+            let l:line = l:indent . substitute(getline(v:foldstart), '\(\S\)\@<=\(\s\{4}\s*\|\t\)\| *{.*[^}]*$\|^\s\+', '', 'g') . ' ' . l:line2
+            let l:lines_count = v:foldend - v:foldstart + 1
+            let l:lines_count_text = '| ' . printf('%10s', l:lines_count . ' lines') . ' |'
+            let l:foldchar = matchstr(&fillchars, 'fold:\zs.')
+            let l:foldtextstart = strpart(l:line, 0, (winwidth(0)*2)/3)
+            let l:foldtextend = l:lines_count_text . repeat(l:foldchar, 8)
+            let l:foldtextlength = strlen(substitute(l:foldtextstart . l:foldtextend, '.', 'x', 'g')) + &foldcolumn
+            return l:foldtextstart . repeat(l:foldchar, winwidth(0)- l:foldtextlength) . l:foldtextend
+        endfunction
+    " @}
+
+    " Initialize directories @{
+        function! InitializeDirectories()
+            let l:parent = $HOME
+            let l:prefix = '.vim'
+            let l:dir_list = {
+                        \ 'backup': 'backupdir',
+                        \ 'views': 'viewdir',
+                        \ 'swap': 'directory' }
+
+            if has('persistent_undo')
+                let l:dir_list['undo'] = 'undodir'
+            endif
+
+            " To specify a different directory in which to place the vimbackup,
+            " vimviews, vimundo, and vimswap files/directories, add the following
+            "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
+            if exists('g:pkk_consolidated_directory')
+                let l:common_dir = g:pkk_consolidated_directory . l:prefix
+            else
+                let l:common_dir = l:parent . l:prefix
+            endif
+
+            if !isdirectory(g:pkk_consolidated_directory)
+                call mkdir(g:pkk_consolidated_directory)
+            endif
+
+            for [l:dirname, l:settingname] in items(l:dir_list)
+                let l:directory = l:common_dir . l:dirname . '/'
+                if exists('*mkdir')
+                    if !isdirectory(l:directory)
+                        call mkdir(l:directory)
+                    endif
+                endif
+                if !isdirectory(l:directory)
+                    echo 'Warning: Unable to create backup directory: ' . l:directory
+                    echo 'Try: mkdir -p ' . l:directory
+                else
+                    let l:directory = substitute(l:directory, ' ', "\\\\ ", 'g')
+                    exec 'set ' . l:settingname . '=' . l:directory
+                endif
+            endfor
+        endfunction
+        call InitializeDirectories()
+    " @}
+
+    " Shell command @{
+        function! s:RunShellCommand(cmdline)
+            botright new
+
+            setlocal buftype=nofile
+            setlocal bufhidden=delete
+            setlocal nobuflisted
+            setlocal noswapfile
+            setlocal nowrap
+            setlocal filetype=shell
+            setlocal syntax=shell
+
+            call setline(1, a:cmdline)
+            call setline(2, substitute(a:cmdline, '.', '=', 'g'))
+            execute 'silent $read !' . escape(a:cmdline, '%#')
+            setlocal nomodifiable
+            1
+        endfunction
+
+        command! -complete=file -nargs=+ Shell call s:RunShellCommand(<q-args>)
+        " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
+    " @}
 
 " @}
 
@@ -432,285 +569,6 @@
             Plugin 'christoomey/vim-tmux-navigator'
         endif
     " @}
-" @}
-
-" Functions @{
-
-    " Get the directory the file @{
-        "  Gets the directory for the file in the current window
-        "  Or the current working dir if there isn't one for the window.
-        "  Use tr to allow that other OS paths, too
-        function! GetFileDir()
-          if winbufnr(0) == -1
-            let l:unislash = getcwd()
-          else
-            let l:unislash = fnamemodify(bufname(winbufnr(0)), ':p:h')
-          endif
-            return tr(l:unislash, '\', '/')
-        endfunc
-    " @}
-
-    " Find a file in parent directory@{
-        " Starting with the current working dir, it walks up the parent folders
-        " until it finds the file, or it hits the stop dir.
-        " If it doesn't find it, it returns "Nothing"
-        function! Find_in_parent(f_name, start_dir, stop_dir)
-          let l:here = a:start_dir
-          while ( strlen( l:here) > 0 )
-            if filereadable( l:here . '/' . a:f_name ) || isdirectory(( l:here . '/' . a:f_name ))
-              return l:here
-            endif
-            let l:fr = match(l:here, '/[^/]*$')
-            if l:fr == -1
-              break
-            endif
-            let l:here = strpart(l:here, 0, l:fr)
-            if l:here == a:stop_dir
-              break
-            endif
-          endwhile
-          return 'Nothing'
-        endfunc
-    " @}
-
-    " Find Project Root Directory @{
-        function! FindProjectRoot()
-            let l:root_indicators = ['cscope.out', '.project', 'generatedFiles', '_builds', 'build.xml', 'readme.md', '.git', '.svn', 'certs', '.root', 'test']
-            for l:indicator in l:root_indicators
-                let l:root_dir = Find_in_parent(l:indicator,GetFileDir(),$HOME)
-                if l:root_dir !=# 'Nothing'
-                    return l:root_dir
-                endif
-            endfor
-            return GetFileDir()
-        endfunc
-        augroup pkk_augroup
-            autocmd FileType * let b:projectroot_dir = FindProjectRoot()
-        augroup END
-    " @}
-
-    " Maximize split window @{
-        function! OpenCurrentAsNewTab()
-            let l:currentPos = getcurpos()
-            tabedit %
-            call setpos('.', l:currentPos)
-        endfunction
-        nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
-    " @}
-
-    " MaximizeToggle split window @{
-        "let g:id_provider = 0
-        "let g:windows_state = {}
-        "function! ToggleMaximize()
-            "if !exists('w:window_info') || g:windows_state[w:window_info[0]]
-                "let w:window_info = [g:id_provider, 1]    " [id, isparent]
-                "let g:windows_state[w:window_info[0]] = 0
-
-                "let l:currentPos = getcurpos()
-                "tabedit %
-                "call setpos(".", l:currentPos)
-
-                "let w:window_info = [g:id_provider, 0]    " [id, isparent]
-                "let g:id_provider = g:id_provider + 1
-            "elseif exists('w:window_info') && !w:window_info[1]
-                "tabclose
-                "let g:windows_state[w:window_info[0]] = 1
-            "endif
-        "endfunction
-        "nmap <leader>+ :call ToggleMaximize()<CR>
-    " @}
-
-    " Create Cscope database @{
-        function! CscopeDone()
-            cs reset
-            call Cycle_csdb()
-        endfunc
-
-        function! CscopeUpdate(workdir, cscopeout)
-            let l:cscopeout = fnamemodify(a:cscopeout, ':p')
-            let l:cscopeout = fnameescape(l:cscopeout)
-            let l:workdir = (a:workdir ==# '')? '.' : a:workdir
-            try | exec 'cs kill '.l:cscopeout | catch | endtry
-            if (&filetype ==# 'python')
-                let l:command = "find . -ipath '*/test' -prune -o -iname '*.py' -print -o -iname '*.pyw' -print > cscope.files && cscope -bqkc"
-            else
-                let l:command = "find . -ipath '*/generatedFiles' -prune -o -iname '*.[ch]' -print -o -iname '*.[ch]pp' -print > cscope.files && cscope -bqkc"
-            endif
-            exec "AsyncRun -post=call\\ CscopeDone() ".
-                        \ '-text='.l:cscopeout.' '
-                        \ '-cwd='.fnameescape(l:workdir).' '.
-                        \ l:command
-        endfunc
-
-        noremap <leader>cdb :call CscopeUpdate(b:projectroot_dir, 'cscope.out')<cr>
-    " @}
-
-    " Toggle background @{
-        function! ToggleBG()
-            let s:tbg = &background
-            " Inversion
-            if s:tbg ==# 'dark'
-                set background=light
-                hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
-                if !has('gui_running')
-                    hi IndentGuidesOdd  ctermbg=254
-                    hi IndentGuidesEven ctermbg=253
-                endif
-            else
-                set background=dark
-                hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
-                if !has('gui_running')
-                    hi IndentGuidesOdd  ctermbg=236
-                    hi IndentGuidesEven ctermbg=237
-                endif
-            endif
-        endfunction
-
-        noremap <leader>bg :call ToggleBG()<CR>
-    " @}
-
-    " Initialize directories @{
-        function! InitializeDirectories()
-            let l:parent = $HOME
-            let l:prefix = '.vim'
-            let l:dir_list = {
-                        \ 'backup': 'backupdir',
-                        \ 'views': 'viewdir',
-                        \ 'swap': 'directory' }
-
-            if has('persistent_undo')
-                let l:dir_list['undo'] = 'undodir'
-            endif
-
-            " To specify a different directory in which to place the vimbackup,
-            " vimviews, vimundo, and vimswap files/directories, add the following
-            "   eg: let g:pkk_consolidated_directory = $HOME . '/.vim/'
-            if exists('g:pkk_consolidated_directory')
-                let l:common_dir = g:pkk_consolidated_directory . l:prefix
-            else
-                let l:common_dir = l:parent . l:prefix
-            endif
-
-            if !isdirectory(g:pkk_consolidated_directory)
-                call mkdir(g:pkk_consolidated_directory)
-            endif
-
-            for [l:dirname, l:settingname] in items(l:dir_list)
-                let l:directory = l:common_dir . l:dirname . '/'
-                if exists('*mkdir')
-                    if !isdirectory(l:directory)
-                        call mkdir(l:directory)
-                    endif
-                endif
-                if !isdirectory(l:directory)
-                    echo 'Warning: Unable to create backup directory: ' . l:directory
-                    echo 'Try: mkdir -p ' . l:directory
-                else
-                    let l:directory = substitute(l:directory, ' ', "\\\\ ", 'g')
-                    exec 'set ' . l:settingname . '=' . l:directory
-                endif
-            endfor
-        endfunction
-        call InitializeDirectories()
-    " @}
-
-    " Initialize NERDTree as needed @{
-        function! NERDTreeInitAsNeeded()
-            redir => l:bufoutput
-            buffers!
-            redir END
-            let l:idx = stridx(l:bufoutput, 'NERD_tree')
-            if l:idx > -1
-                NERDTreeMirror
-                NERDTreeFind
-                wincmd l
-            endif
-        endfunction
-    " @}
-
-    " Shell command @{
-        function! s:RunShellCommand(cmdline)
-            botright new
-
-            setlocal buftype=nofile
-            setlocal bufhidden=delete
-            setlocal nobuflisted
-            setlocal noswapfile
-            setlocal nowrap
-            setlocal filetype=shell
-            setlocal syntax=shell
-
-            call setline(1, a:cmdline)
-            call setline(2, substitute(a:cmdline, '.', '=', 'g'))
-            execute 'silent $read !' . escape(a:cmdline, '%#')
-            setlocal nomodifiable
-            1
-        endfunction
-
-        command! -complete=file -nargs=+ Shell call s:RunShellCommand(<q-args>)
-        " e.g. Grep current file for <search_term>: Shell grep -Hn <search_term> %
-    " @}
-
-    " Helper functions @{
-        function! VisualSelection(direction, extra_filter) range
-            let l:saved_reg = @"
-            execute 'normal! vgvy'
-
-            let l:pattern = escape(@", '\\/.*$^~[]')
-            let l:pattern = substitute(l:pattern, "\n$", '', '')
-
-            if a:direction ==# 'gv'
-                call CmdLine("Ag \"" . l:pattern . "\" " )
-            elseif a:direction ==# 'replace'
-                call CmdLine('%s' . '/'. l:pattern . '/')
-            endif
-
-            let @/ = l:pattern
-            let @" = l:saved_reg
-        endfunction
-    " @}
-
-    " Find and open companion file for c and cpp @{
-        function! FindCompanionFile()
-            let l:current_file=expand('%:t')
-            if l:current_file[-4:] ==# '.cpp'
-                cs find f %:t:r.hpp
-            elseif l:current_file[-4:] ==# '.hpp'
-                cs find f %:t:r.cpp
-            elseif l:current_file[-2:] ==# '.c'
-                cs find f %:t:r.h
-            elseif l:current_file[-2:] ==# '.h'
-                cs find f %:t:r.c
-            else
-                echo 'No companion file for the file ' l:current_file
-            endif
-        endfunction
-    " @}
-
-    " toggle normal line numbers and relative line numbers @{
-        function! NumberToggle()
-          if(&relativenumber == 1)
-            set norelativenumber
-          else
-            set relativenumber
-          endif
-        endfunc
-    " @}
-
-    " set environment for c and cpp  @{
-        function! SetupCandCPPenviron()
-            "
-            " Search path for 'gf' command (e.g. open #include-d files)
-            "
-            set path+=/usr/include/c++/**
-
-            "
-            " Especially for C and C++, use section 3 of the manpages
-            "
-            noremap <buffer> <silent> K :exe "Man" 3 expand('<cword>') <CR>
-        endfunction
-    " @}
-
 " @}
 
 " Plugins settings @{
@@ -1384,6 +1242,11 @@
                     set completeopt=menu,preview,longest
                 endif
             " @}
+            " Matchit @{
+                " enable matchit plugin which extends usage of % operator to match
+                " more words ex. if/end def/end html tags etc.
+                runtime macros/matchit.vim
+            " @}
 
             " ALE @{
                 if g:pkk_syntax_checker ==# 'ale'
@@ -1678,6 +1541,31 @@
                 nmap <C-@><C-@>d :vert scs find d <C-R>=expand("<cword>")<CR><CR>
 
                 au BufEnter *.cpp,*.hpp,*.h,*.py,*.pyw      call Cycle_csdb()
+
+                " Create Cscope database @{
+                    function! CscopeDone()
+                        cs reset
+                        call Cycle_csdb()
+                    endfunc
+
+                    function! CscopeUpdate(workdir, cscopeout)
+                        let l:cscopeout = fnamemodify(a:cscopeout, ':p')
+                        let l:cscopeout = fnameescape(l:cscopeout)
+                        let l:workdir = (a:workdir ==# '')? '.' : a:workdir
+                        try | exec 'cs kill '.l:cscopeout | catch | endtry
+                        if (&filetype ==# 'python')
+                            let l:command = "find . -ipath '*/test' -prune -o -iname '*.py' -print -o -iname '*.pyw' -print > cscope.files && cscope -bqkc"
+                        else
+                            let l:command = "find . -ipath '*/generatedFiles' -prune -o -iname '*.[ch]' -print -o -iname '*.[ch]pp' -print > cscope.files && cscope -bqkc"
+                        endif
+                        exec "AsyncRun -post=call\\ CscopeDone() ".
+                                    \ '-text='.l:cscopeout.' '
+                                    \ '-cwd='.fnameescape(l:workdir).' '.
+                                    \ l:command
+                    endfunc
+
+                    noremap <leader>cdb :call CscopeUpdate(b:projectroot_dir, 'cscope.out')<cr>
+                " @}
             " @}
             " Clang-Format @{
                 let g:clang_format#command = 'clang-format' " Path to the executable
@@ -1875,7 +1763,7 @@
 
 " @}
 
-" General @{
+" Setting Vim options @{
 
     " set pastetoggle=<F2>           " pastetoggle (sane indentation on pastes)
     set ttyfast  " fast scrolling
@@ -1894,17 +1782,10 @@
     " set shellxquote='\"'
     " set shellquote=''
 
-    " enable matchit plugin which extends usage of % operator to match
-    " more words ex. if/end def/end html tags etc.
-    runtime macros/matchit.vim
-
-    filetype plugin indent on   " Automatically detect file types.
-    syntax on                   " Syntax highlighting
     set mouse=a                 " Automatically enable mouse usage
     set mousehide               " Hide the mouse cursor while typing
     " Let Vim use utf-8 internally, because many scripts require this
     set encoding=utf-8
-    scriptencoding utf-8
 
     if has('clipboard')
         if has('unnamedplus')  " When possible use + register for copy-paste
@@ -1912,15 +1793,6 @@
         else         " On mac and Windows, use * register for copy-paste
             set clipboard=unnamed
         endif
-    endif
-
-    " Most prefer to automatically switch to the current file directory when
-    " a new buffer is opened
-    if !exists('g:pkk_no_autochdir')
-        augroup pkk_augroup
-            autocmd BufEnter * if bufname("") !~ "^\[A-Za-z0-9\]*://" | lcd %:p:h | endif
-        augroup END
-        " Always switch to the current file directory
     endif
 
     "set autowrite                       " Automatically write a file when leaving a modified buffer
@@ -1936,74 +1808,20 @@
     set foldmethod=indent
     set foldlevel=99
 
-    " Instead of reverting the cursor to the last position in the buffer, we
-    " set it to the first line when editing a git commit message
-    augroup pkk_augroup
-        au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
-    augroup END
-
-    " Restore cursor to file position in previous editing session
-    " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
-    if !exists('g:pkk_no_restore_cursor')
-        function! ResCur()
-            if line("'\"") <= line('$')
-                silent! normal! g`"
-                return 1
-            endif
-        endfunction
-
-        augroup resCur
-            autocmd!
-            autocmd BufWinEnter * call ResCur()
-        augroup END
+    " Setting up the directories
+    set backup                  " Backups are nice ...
+    if has('persistent_undo')
+        set undofile                " So is persistent undo ...
+        set undolevels=1000         " Maximum number of changes that can be undone
+        set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
     endif
-
-    " Setting up the directories @{
-        set backup                  " Backups are nice ...
-        if has('persistent_undo')
-            set undofile                " So is persistent undo ...
-            set undolevels=1000         " Maximum number of changes that can be undone
-            set undoreload=10000        " Maximum number lines to save for undo on a buffer reload
-        endif
-
-        if !exists('g:pkk_no_views')
-            " Add exclusions to mkview and loadview
-            " eg: *.*, svn-commit.tmp
-            let g:skipview_files = [
-                \ '\[example pattern\]'
-                \ ]
-        endif
-    " @}
 
     if executable('ag')
       set grepprg=ag\ --nogroup\ --nocolor\ --ignore-case\ --column
       set grepformat=%f:%l:%c:%m,%f:%l:%m
     endif
 
-    function! NeatFoldText()
-        let l:indent = repeat(' ', indent(v:foldstart))
-        let l:line2 = ''
-        if &filetype ==# 'xml'
-            let l:temp = substitute(getline(v:foldstart + 1), '\s\+', '', 'g')
-            if strpart(l:temp, 1, 10) ==# 'SHORT-NAME'
-                let l:line2 = '-> ' . substitute(l:temp, '<[^>]*>', '', 'g') . ' '
-            endif
-        endif
-        let l:line = l:indent . substitute(getline(v:foldstart), '\(\S\)\@<=\(\s\{4}\s*\|\t\)\| *{.*[^}]*$\|^\s\+', '', 'g') . ' ' . l:line2
-        let l:lines_count = v:foldend - v:foldstart + 1
-        let l:lines_count_text = '| ' . printf('%10s', l:lines_count . ' lines') . ' |'
-        let l:foldchar = matchstr(&fillchars, 'fold:\zs.')
-        let l:foldtextstart = strpart(l:line, 0, (winwidth(0)*2)/3)
-        let l:foldtextend = l:lines_count_text . repeat(l:foldchar, 8)
-        let l:foldtextlength = strlen(substitute(l:foldtextstart . l:foldtextend, '.', 'x', 'g')) + &foldcolumn
-        return l:foldtextstart . repeat(l:foldchar, winwidth(0)- l:foldtextlength) . l:foldtextend
-    endfunction
-
     set foldtext=NeatFoldText()
-
-" @}
-
-" Vim UI @{
 
     " Nicer vertical split line
     set fillchars+=vert:│
@@ -2014,6 +1832,7 @@
     " vimdiff options
     " Always use vertical diffs
     set diffopt+=vertical
+
     if &diff
         colorscheme molokai
     else
@@ -2099,10 +1918,47 @@
     set wildignore+=*.pyc "Python Object codes"
     set wildignore+=*.orig,*.rej "Merge resolution files"
 
-    " Resize Split When the window is resized"
+    set nowrap                      " Do not wrap long lines
+    set linebreak
+    set autoindent                  " Indent at the same level of the previous line
+    set shiftwidth=4                " Use indents of 4 spaces
+    set smarttab
+    set expandtab                   " Tabs are spaces, not tabs
+    set tabstop=4                   " An indentation every four columns
+    set softtabstop=4               " Let backspace delete indent
+    set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
+    set splitright                  " Puts new vsplit windows to the right of the current
+    set splitbelow                  " Puts new split windows to the bottom of the current
+    "set matchpairs+=<:>             " Match, to be used with %
+    "set comments=sl:/*,mb:*,elx:*/  " auto format comment blocks
+
+    "highlight ColorColumn ctermbg=red      " set a visible line at 80 char
+    "call matchadd('ColorColumn', '\%81v', 100)
+
+    " au command for each filetypes
+    "autocmd FileType go autocmd BufWritePre <buffer> Fmt
+
     augroup pkk_augroup
-        au VimResized * :wincmd =
+        au FileType xml,c,cpp setlocal foldmethod=syntax foldlevel=0
+        au FileType c,cpp,h,hpp,vim set textwidth=119 colorcolumn=+1
+        au FileType python set textwidth=79 colorcolumn=+1
+        autocmd FileType haskell,puppet,ruby,yml,html,xml,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
+
+        " Workaround vim-commentary for Haskell
+        autocmd FileType haskell setlocal commentstring=--\ %s
+
+        " Workaround broken colour highlighting in Haskell
+        autocmd FileType haskell,rust setlocal nospell
     augroup END
+
+    filetype plugin indent on   " Automatically detect file types.
+    syntax on                   " Syntax highlighting
+    scriptencoding utf-8
+
+    " Dictionary path, from which the words are being looked up.
+    set dictionary=/usr/share/dict/words
+
+    set backupskip=/tmp/*,/private/tmp/*" " Make Vim able to edit corntab fiels again.
 
 " @}
 
@@ -2145,40 +2001,232 @@
         endif
     endif
 
+    " Resize Split When the window is resized"
+    augroup pkk_augroup
+        au VimResized * :wincmd =
+    augroup END
+
 " @}
 
-" Formatting @{
+" Features @{
 
-    set nowrap                      " Do not wrap long lines
-    set linebreak
-    set autoindent                  " Indent at the same level of the previous line
-    set shiftwidth=4                " Use indents of 4 spaces
-    set smarttab
-    set expandtab                   " Tabs are spaces, not tabs
-    set tabstop=4                   " An indentation every four columns
-    set softtabstop=4               " Let backspace delete indent
-    set nojoinspaces                " Prevents inserting two spaces after punctuation on a join (J)
-    set splitright                  " Puts new vsplit windows to the right of the current
-    set splitbelow                  " Puts new split windows to the bottom of the current
-    "set matchpairs+=<:>             " Match, to be used with %
-    "set comments=sl:/*,mb:*,elx:*/  " auto format comment blocks
+    " Maximize split window @{
+        function! OpenCurrentAsNewTab()
+            let l:currentPos = getcurpos()
+            tabedit %
+            call setpos('.', l:currentPos)
+        endfunction
+        nmap <leader>+ :call OpenCurrentAsNewTab()<CR>
+    " @}
 
-    "highlight ColorColumn ctermbg=red      " set a visible line at 80 char
-    "call matchadd('ColorColumn', '\%81v', 100)
+    " MaximizeToggle split window @{
+        "let g:id_provider = 0
+        "let g:windows_state = {}
+        "function! ToggleMaximize()
+            "if !exists('w:window_info') || g:windows_state[w:window_info[0]]
+                "let w:window_info = [g:id_provider, 1]    " [id, isparent]
+                "let g:windows_state[w:window_info[0]] = 0
 
-    " au command for each filetypes
-    "autocmd FileType go autocmd BufWritePre <buffer> Fmt
-    augroup pkk_augroup
-        au FileType c,cpp,h,hpp,vim set textwidth=119 colorcolumn=+1
-        au FileType python set textwidth=79 colorcolumn=+1
-        autocmd FileType haskell,puppet,ruby,yml,html,xml,javascript,css setlocal shiftwidth=2 softtabstop=2 tabstop=2
+                "let l:currentPos = getcurpos()
+                "tabedit %
+                "call setpos(".", l:currentPos)
 
-        " Workaround vim-commentary for Haskell
-        autocmd FileType haskell setlocal commentstring=--\ %s
+                "let w:window_info = [g:id_provider, 0]    " [id, isparent]
+                "let g:id_provider = g:id_provider + 1
+            "elseif exists('w:window_info') && !w:window_info[1]
+                "tabclose
+                "let g:windows_state[w:window_info[0]] = 1
+            "endif
+        "endfunction
+        "nmap <leader>+ :call ToggleMaximize()<CR>
+    " @}
 
-        " Workaround broken colour highlighting in Haskell
-        autocmd FileType haskell,rust setlocal nospell
-    augroup END
+    " Toggle background @{
+        function! ToggleBG()
+            let s:tbg = &background
+            " Inversion
+            if s:tbg ==# 'dark'
+                set background=light
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=7 guibg=#c0c0c0 ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=254
+                    hi IndentGuidesEven ctermbg=253
+                endif
+            else
+                set background=dark
+                hi CursorLine   gui=NONE cterm=NONE ctermbg=237 guibg=#3a3a3a ctermfg=NONE
+                if !has('gui_running')
+                    hi IndentGuidesOdd  ctermbg=236
+                    hi IndentGuidesEven ctermbg=237
+                endif
+            endif
+        endfunction
+
+        noremap <leader>bg :call ToggleBG()<CR>
+    " @}
+
+    " Modify visual mode search@{
+        function! VisualSelection(direction, extra_filter) range
+            let l:saved_reg = @"
+            execute 'normal! vgvy'
+
+            let l:pattern = escape(@", '\\/.*$^~[]')
+            let l:pattern = substitute(l:pattern, "\n$", '', '')
+
+            if a:direction ==# 'gv'
+                call CmdLine("Ag \"" . l:pattern . "\" " )
+            elseif a:direction ==# 'replace'
+                call CmdLine('%s' . '/'. l:pattern . '/')
+            endif
+
+            let @/ = l:pattern
+            let @" = l:saved_reg
+        endfunction
+
+        " Visual mode pressing * or # searches for the current selection
+        " Super useful! From an idea by Michael Naumann
+        vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
+        vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
+    " @}
+
+    " toggle normal line numbers and relative line numbers @{
+        function! NumberToggle()
+          if(&relativenumber == 1)
+            set norelativenumber
+          else
+            set relativenumber
+          endif
+        endfunc
+
+        " Toggle relative line numbers
+        if v:version > 703
+            nnoremap <leader>tn :call NumberToggle()<cr>
+        endif
+    " @}
+
+    " Restore cursor position @{
+        " Restore cursor to file position in previous editing session
+        " http://vim.wikia.com/wiki/Restore_cursor_to_file_position_in_previous_editing_session
+        if !exists('g:pkk_no_restore_cursor')
+            function! ResCur()
+                if line("'\"") <= line('$')
+                    silent! normal! g`"
+                    return 1
+                endif
+            endfunction
+
+            augroup resCur
+                autocmd!
+                autocmd BufWinEnter * call ResCur()
+            augroup END
+        endif
+
+        " Instead of reverting the cursor to the last position in the buffer, we
+        " set it to the first line when editing a git commit message
+        augroup pkk_augroup
+            au FileType gitcommit au! BufEnter COMMIT_EDITMSG call setpos('.', [0, 1, 1, 0])
+        augroup END
+    " @}
+
+    " Make Sure that Vim returns to the same line when we reopen a file @{
+        augroup line_return
+            au!
+            au BufReadPost *
+                        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+                        \ execute 'normal! g`"zvzz' |
+                        \ endif
+        augroup END
+    " @}
+
+    " Automatically change pwd to current file dir @{
+        " automatically switch to the current file directory when
+        " a new buffer is opened
+        if !exists('g:pkk_no_autochdir')
+            augroup pkk_augroup
+                autocmd BufEnter * if bufname("") !~ "^\[A-Za-z0-9\]*://" | lcd %:p:h | endif
+            augroup END
+            " Always switch to the current file directory
+        endif
+    " @}
+
+" @}
+
+" Code Formatting, Navigation and building @{
+
+    let g:xml_syntax_folding = 1
+    let g:python_highlight_all=1
+
+    " Formatting @{
+        " Convert a 1-line CPP function definition signature to a declaration signature
+        " Use by putting the cursor anywhere on the same line as the function signature
+        nnoremap _sig >>Wd2f:A;<ESC>0w
+
+        " Put cursor over a character to align the rest of the paragraph to, then type _align
+        nnoremap _align ywmvV}:s/<C-r>"/`<C-r>"/g<CR>V'v:!column -ts \`<CR>
+    " @}
+
+    " Navigation @{
+        " Open previous tag in new tab
+        nnoremap _t :tabnew %<CR>:tabprev<CR><C-t>
+
+        " Move to beginning of next word, skipping non-word characters
+        function! NextWord() range
+            for l:i in range(1,v:count1)
+                call search('\W*\<\w', 'eW')
+            endfor
+        endfunction
+        noremap <silent> W :call NextWord()<CR>
+
+        " Manpage for word under cursor via 'M' in command moderuntime
+        runtime ftplugin/man.vim
+        augroup pkk_augroup
+            au FileType c,cpp,h,hpp noremap <buffer> <silent> M :exe "Man" 3 expand('<cword>') <CR>
+            au FileType sh,shell noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
+            au FileType vim noremap <buffer> <silent> M :h <C-R>=expand('<cword>')<CR><CR>
+        augroup END
+
+        " Search path for 'gf' command (e.g. open #include-d files)
+        augroup pkk_augroup
+            au FileType c,cpp,h,hpp set path+=/usr/include/c++/**
+        augroup END
+
+        " Find and open companion file for c and cpp @{
+            function! FindCompanionFile()
+                let l:current_file=expand('%:t')
+                if l:current_file[-4:] ==# '.cpp'
+                    cs find f %:t:r.hpp
+                elseif l:current_file[-4:] ==# '.hpp'
+                    cs find f %:t:r.cpp
+                elseif l:current_file[-2:] ==# '.c'
+                    cs find f %:t:r.h
+                elseif l:current_file[-2:] ==# '.h'
+                    cs find f %:t:r.c
+                else
+                    echo 'No companion file for the file ' l:current_file
+                endif
+            endfunction
+
+            " Open compainion file, if it exists (e.g. test.h -> test.cpp), using Ctrl-C and Ctrl-H
+            augroup pkk_augroup
+                autocmd FileType c,cpp  nnoremap <C-C> :call FindCompanionFile()<CR>
+            augroup end
+        " @}
+    " @}
+
+    " Building @{
+        augroup pkk_augroup
+            if WINDOWS()
+                autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o %< && ./%<"<CR>
+                autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o %< && ./%<"<CR>
+                " autocmd FileType c,cpp nnoremap <leader>r :Shell bash -c "./%<"<CR>
+            endif
+        augroup end
+
+    " @}
+
+" @}
+
+" Key (re)Mappings @{
 
     " Automatically go to the end of pasted text
     vnoremap <silent> y y`]
@@ -2186,26 +2234,6 @@
 
     " replaces selected text with test from buffer
     vnoremap p <Esc>:let current_reg = @"<CR>gvs<C-R>=current_reg<CR><Esc>`]
-
-" @}
-
-" Programming @{
-
-    let g:xml_syntax_folding = 1
-    augroup pkk_augroup
-        au FileType xml,c,cpp setlocal foldmethod=syntax foldlevel=0
-    augroup END
-
-    " setup environment for C and CPP
-    au BufNewFile,BufRead *.c,*.cc,*.cpp,*.h call SetupCandCPPenviron()
-
-    " Python @{
-        let g:python_highlight_all=1
-    " @}
-
-" @}
-
-" Key (re)Mappings @{
 
     " TAB and Shift-TAB in normal mode cycle buffers
     nmap <Tab> :bn<CR>
@@ -2217,11 +2245,6 @@
     " assign q; to avoid shift pressing when searching last ex commands
     nmap q; q:
     vmap q; q:
-
-    " Toggle relative line numbers
-    if v:version > 703
-        nnoremap <leader>tn :call NumberToggle()<cr>
-    endif
 
     " REFRESH COMMANDS
     " warning: to refresh NERDTree just type 'r' being in NERD window
@@ -2463,42 +2486,6 @@
 
 " @}
 
-" Code Navigation and Formatting @{
-
-    " Open compainion file, if it exists (e.g. test.h -> test.cpp), using Ctrl-C and Ctrl-H
-    augroup pkk_augroup
-        autocmd FileType c,cpp  nnoremap <C-C> :call FindCompanionFile()<CR>
-    augroup end
-
-    " Convert a 1-line CPP function definition signature to a declaration signature
-    " Use by putting the cursor anywhere on the same line as the function signature
-    nnoremap _sig >>Wd2f:A;<ESC>0w
-
-    " Put cursor over a character to align the rest of the paragraph to, then type _align
-    nnoremap _align ywmvV}:s/<C-r>"/`<C-r>"/g<CR>V'v:!column -ts \`<CR>
-
-    " Open previous tag in new tab
-    nnoremap _t :tabnew %<CR>:tabprev<CR><C-t>
-
-    " Move to beginning of next word, skipping non-word characters
-    function! NextWord() range
-        for l:i in range(1,v:count1)
-            call search('\W*\<\w', 'eW')
-        endfor
-    endfunction
-    noremap <silent> W :call NextWord()<CR>
-
-    augroup pkk_augroup
-        if WINDOWS()
-            autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o %< && ./%<"<CR>
-            autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o %< && ./%<"<CR>
-            " autocmd FileType c,cpp nnoremap <leader>r :Shell bash -c "./%<"<CR>
-        endif
-    augroup end
-
-
-" @}
-
 " Misc @{
 
     " design lines for c, cpp
@@ -2508,38 +2495,6 @@
     " design lines for python
     iabbr #-- #------------------------------------------------------------------------
     iabbr #** #************************************************************************
-
-
-    " Manpage for word under cursor via 'M' in command moderuntime
-    runtime ftplugin/man.vim
-    augroup pkk_augroup
-        au FileType c,cpp,h,hpp,sh,shell noremap <buffer> <silent> M :exe "Man" expand('<cword>') <CR>
-        au FileType vim noremap <buffer> <silent> M :h <C-R>=expand('<cword>')<CR><CR>
-    augroup END
-
-    " Make Sure that Vim returns to the same line when we reopen a file"
-    augroup line_return
-        au!
-        au BufReadPost *
-                    \ if line("'\"") > 0 && line("'\"") <= line("$") |
-                    \ execute 'normal! g`"zvzz' |
-                    \ endif
-    augroup END
-
-    "autocmd VimLeave * SessionSaveAs vim_auto_saved_session
-    "autocmd BufWritePost ~/_vimrc source ~/_vimrc     "Sourc vimrce file when modified
-
-    set nospell                           " Spell checking off
-
-    " Dictionary path, from which the words are being looked up.
-    set dictionary=/usr/share/dict/words
-
-    " Visual mode pressing * or # searches for the current selection
-    " Super useful! From an idea by Michael Naumann
-    vnoremap <silent> * :<C-u>call VisualSelection('', '')<CR>/<C-R>=@/<CR><CR>
-    vnoremap <silent> # :<C-u>call VisualSelection('', '')<CR>?<C-R>=@/<CR><CR>
-
-    set backupskip=/tmp/*,/private/tmp/*" " Make Vim able to edit corntab fiels again.
 
     augroup pkk_augroup
         autocmd VimEnter * helptags ~/.vim/doc
