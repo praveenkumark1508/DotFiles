@@ -2217,8 +2217,8 @@
         " Build and Run single file
         augroup pkk_augroup
             if WINDOWS()
-                autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o %< && ./%<"<CR>
-                autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o %< && ./%<"<CR>
+                autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o bin/%< && ./bin/%<"<CR>
+                autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o bin/%< && ./bin/%<"<CR>
             endif
         augroup end
 
