@@ -2214,11 +2214,11 @@
     " @}
 
     " Building @{
+        " Build and Run single file
         augroup pkk_augroup
             if WINDOWS()
                 autocmd FileType c nnoremap <leader>r :Shell bash -c "gcc % -o %< && ./%<"<CR>
                 autocmd FileType cpp nnoremap <leader>r :Shell bash -c "g++ % -o %< && ./%<"<CR>
-                " autocmd FileType c,cpp nnoremap <leader>r :Shell bash -c "./%<"<CR>
             endif
         augroup end
 

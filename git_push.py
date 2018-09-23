@@ -81,7 +81,7 @@ def create_zip(zipfile_name, folder):
     call("rm -f {}.z*".format(zipfile_name), shell=True)
 
     logging.info("Renaming the zipfiles")
-    for i in range(15):
+    for i in range(99):
         call("mv temp.z{:02d} {}.z{:02d} 2> /dev/null".format(
             i, zipfile_name, i), shell=True)
     call('mv temp.zip {}.zip'.format(zipfile_name), shell=True)
