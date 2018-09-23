@@ -1684,9 +1684,9 @@
                 let g:jedi#goto_command = '<leader>d'
                 let g:jedi#goto_assignments_command = '<leader>g'
                 let g:jedi#goto_definitions_command = ''
-                let g:jedi#usages_command = '<leader>su'
+                let g:jedi#usages_command = '<leader>us'
 
-                let g:jedi#documentation_command = 'K'
+                let g:jedi#documentation_command = 'M'
                 let g:jedi#completions_command = '<C-Space>'
                 let g:jedi#rename_command = '<leader>rn'
             " @}
